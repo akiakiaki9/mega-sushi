@@ -101,8 +101,10 @@ export default function LocationMap({
   const [accuracy, setAccuracy] = useState(null);
 
   // Сообщение об ошибке/неточной геолокации
-  const [locationMessage, setLocationMessage] =
-    useState('');
+  const [locationMessage, setLocationMessage] = useState('');
+
+  // Показывать ли подсказку "нажмите на кнопку"
+  const [showLocateHint, setShowLocateHint] = useState(true);
 
   // ==========================================================
   // Получить нормальные координаты
@@ -160,10 +162,7 @@ export default function LocationMap({
           return;
         }
 
-        if (
-          data?.display_name &&
-          onAddressFound
-        ) {
+        if (data?.display_name && onAddressFound) {
           onAddressFound(data.display_name);
         }
       } catch (err) {
@@ -216,10 +215,7 @@ export default function LocationMap({
       };
 
       // Передвигаем маркер
-      marker.setLatLng([
-        latitude,
-        longitude,
-      ]);
+      marker.setLatLng([latitude, longitude]);
 
       // Передвигаем карту
       if (flyTo) {
@@ -251,10 +247,7 @@ export default function LocationMap({
 
       // Получаем адрес
       if (findAddress) {
-        reverseGeocode(
-          latitude,
-          longitude
-        );
+        reverseGeocode(latitude, longitude);
       }
 
       // Исправляем размеры карты
@@ -272,6 +265,9 @@ export default function LocationMap({
   // ==========================================================
 
   const handleMyLocation = useCallback(() => {
+    // Скрываем подсказку
+    setShowLocateHint(false);
+
     if (!navigator.geolocation) {
       setLocationMessage(
         'Геолокация не поддерживается вашим браузером'
@@ -447,41 +443,25 @@ export default function LocationMap({
     }
 
     handleMyLocation();
-  }, [
-    locateRequest,
-    handleMyLocation,
-  ]);
+  }, [locateRequest, handleMyLocation]);
 
   // ==========================================================
   // ИНИЦИАЛИЗАЦИЯ КАРТЫ
   // ==========================================================
 
   useEffect(() => {
-    if (
-      !containerRef.current ||
-      mapRef.current
-    ) {
+    if (!containerRef.current || mapRef.current) {
       return;
     }
 
-    const initialCoords =
-      getValidCoords();
+    const initialCoords = getValidCoords();
 
-    const map = L.map(
-      containerRef.current,
-      {
-        center: [
-          initialCoords.lat,
-          initialCoords.lng,
-        ],
-
-        zoom: 17,
-
-        zoomControl: false,
-
-        attributionControl: true,
-      }
-    );
+    const map = L.map(containerRef.current, {
+      center: [initialCoords.lat, initialCoords.lng],
+      zoom: 17,
+      zoomControl: false,
+      attributionControl: true,
+    });
 
     // ========================================================
     // CARTO VOYAGER
@@ -491,9 +471,7 @@ export default function LocationMap({
       'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       {
         maxZoom: 20,
-
         subdomains: 'abcd',
-
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       }
@@ -514,10 +492,7 @@ export default function LocationMap({
     // ========================================================
 
     const marker = L.marker(
-      [
-        initialCoords.lat,
-        initialCoords.lng,
-      ],
+      [initialCoords.lat, initialCoords.lng],
       {
         icon: customIcon,
         draggable: true,
@@ -525,112 +500,80 @@ export default function LocationMap({
     ).addTo(map);
 
     // Запоминаем начальную позицию
-    lastPositionRef.current =
-      initialCoords;
+    lastPositionRef.current = initialCoords;
 
     // ========================================================
     // ПЕРЕТАСКИВАНИЕ МАРКЕРА
     // ========================================================
 
-    marker.on(
-      'dragend',
-      () => {
-        const pos =
-          marker.getLatLng();
+    marker.on('dragend', () => {
+      // Скрываем подсказку
+      setShowLocateHint(false);
 
-        const lat = pos.lat;
-        const lng = pos.lng;
+      const pos = marker.getLatLng();
 
-        lastPositionRef.current = {
-          lat,
-          lng,
-        };
+      const lat = pos.lat;
+      const lng = pos.lng;
 
-        // При ручном выборе
-        // точность GPS больше не важна
-        setAccuracy(null);
+      lastPositionRef.current = { lat, lng };
 
-        setLocationMessage('');
+      // При ручном выборе
+      // точность GPS больше не важна
+      setAccuracy(null);
 
-        if (onPick) {
-          onPick({
-            lat,
-            lng,
-          });
-        }
+      setLocationMessage('');
 
-        reverseGeocode(
-          lat,
-          lng
-        );
-
-        // Центрируем карту
-        map.flyTo(
-          [lat, lng],
-          Math.max(
-            map.getZoom(),
-            18
-          ),
-          {
-            animate: true,
-            duration: 0.8,
-          }
-        );
+      if (onPick) {
+        onPick({ lat, lng });
       }
-    );
+
+      reverseGeocode(lat, lng);
+
+      // Центрируем карту
+      map.flyTo(
+        [lat, lng],
+        Math.max(map.getZoom(), 18),
+        {
+          animate: true,
+          duration: 0.8,
+        }
+      );
+    });
 
     // ========================================================
     // КЛИК ПО КАРТЕ
     // ========================================================
 
-    map.on(
-      'click',
-      (e) => {
-        const {
-          lat,
-          lng,
-        } = e.latlng;
+    map.on('click', (e) => {
+      // Скрываем подсказку
+      setShowLocateHint(false);
 
-        lastPositionRef.current = {
-          lat,
-          lng,
-        };
+      const { lat, lng } = e.latlng;
 
-        // Ручной выбор
-        setAccuracy(null);
+      lastPositionRef.current = { lat, lng };
 
-        setLocationMessage('');
+      // Ручной выбор
+      setAccuracy(null);
 
-        marker.setLatLng([
-          lat,
-          lng,
-        ]);
+      setLocationMessage('');
 
-        map.flyTo(
-          [lat, lng],
-          Math.max(
-            map.getZoom(),
-            18
-          ),
-          {
-            animate: true,
-            duration: 0.8,
-          }
-        );
+      marker.setLatLng([lat, lng]);
 
-        if (onPick) {
-          onPick({
-            lat,
-            lng,
-          });
+      map.flyTo(
+        [lat, lng],
+        Math.max(map.getZoom(), 18),
+        {
+          animate: true,
+          duration: 0.8,
         }
+      );
 
-        reverseGeocode(
-          lat,
-          lng
-        );
+      if (onPick) {
+        onPick({ lat, lng });
       }
-    );
+
+      reverseGeocode(lat, lng);
+    });
 
     // Сохраняем ссылки
     mapRef.current = map;
@@ -670,11 +613,7 @@ export default function LocationMap({
     const map = mapRef.current;
     const marker = markerRef.current;
 
-    if (
-      !map ||
-      !marker ||
-      !coords
-    ) {
+    if (!map || !marker || !coords) {
       return;
     }
 
@@ -688,40 +627,25 @@ export default function LocationMap({
       return;
     }
 
-    const current =
-      marker.getLatLng();
+    const current = marker.getLatLng();
 
     const dist =
-      Math.abs(
-        current.lat - lat
-      ) +
-      Math.abs(
-        current.lng - lng
-      );
+      Math.abs(current.lat - lat) +
+      Math.abs(current.lng - lng);
 
     // Практически одинаковые
     if (dist < 0.00001) {
       return;
     }
 
-    lastPositionRef.current = {
-      lat,
-      lng,
-    };
+    lastPositionRef.current = { lat, lng };
 
-    marker.setLatLng([
-      lat,
-      lng,
-    ]);
+    marker.setLatLng([lat, lng]);
 
-    map.flyTo(
-      [lat, lng],
-      18,
-      {
-        animate: true,
-        duration: 1,
-      }
-    );
+    map.flyTo([lat, lng], 18, {
+      animate: true,
+      duration: 1,
+    });
 
     setTimeout(() => {
       if (mapRef.current) {
@@ -751,26 +675,14 @@ export default function LocationMap({
       return;
     }
 
-    const scrollY =
-      window.scrollY;
+    const scrollY = window.scrollY;
 
-    document.body.style.position =
-      'fixed';
-
-    document.body.style.top =
-      `-${scrollY}px`;
-
-    document.body.style.left =
-      '0';
-
-    document.body.style.right =
-      '0';
-
-    document.body.style.width =
-      '100%';
-
-    document.body.style.overflow =
-      'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
 
     const onKey = (e) => {
       if (e.key === 'Escape') {
@@ -778,39 +690,19 @@ export default function LocationMap({
       }
     };
 
-    window.addEventListener(
-      'keydown',
-      onKey
-    );
+    window.addEventListener('keydown', onKey);
 
     return () => {
-      document.body.style.position =
-        '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
 
-      document.body.style.top =
-        '';
+      window.scrollTo(0, scrollY);
 
-      document.body.style.left =
-        '';
-
-      document.body.style.right =
-        '';
-
-      document.body.style.width =
-        '';
-
-      document.body.style.overflow =
-        '';
-
-      window.scrollTo(
-        0,
-        scrollY
-      );
-
-      window.removeEventListener(
-        'keydown',
-        onKey
-      );
+      window.removeEventListener('keydown', onKey);
     };
   }, [fullscreen]);
 
@@ -829,139 +721,105 @@ export default function LocationMap({
       return;
     }
 
-    const timer =
-      setTimeout(
-        async () => {
-          setSearching(true);
+    const timer = setTimeout(async () => {
+      setSearching(true);
 
-          try {
-            let searchQuery =
-              query.trim();
+      try {
+        let searchQuery = query.trim();
 
-            const lowerQuery =
-              searchQuery.toLowerCase();
+        const lowerQuery = searchQuery.toLowerCase();
 
-            const hasBukhara =
-              lowerQuery.includes(
-                'бухар'
-              ) ||
-              lowerQuery.includes(
-                'bukhara'
-              );
+        const hasBukhara =
+          lowerQuery.includes('бухар') ||
+          lowerQuery.includes('bukhara');
 
-            if (!hasBukhara) {
-              searchQuery =
-                `${searchQuery}, Бухара, Узбекистан`;
-            }
+        if (!hasBukhara) {
+          searchQuery = `${searchQuery}, Бухара, Узбекистан`;
+        }
 
-            const url =
-              `https://nominatim.openstreetmap.org/search` +
-              `?format=json` +
-              `&q=${encodeURIComponent(
-                searchQuery
-              )}` +
-              `&countrycodes=uz` +
-              `&viewbox=${BUKHARA_BOUNDS.left},${BUKHARA_BOUNDS.top},${BUKHARA_BOUNDS.right},${BUKHARA_BOUNDS.bottom}` +
-              `&bounded=1` +
-              `&limit=6` +
-              `&accept-language=ru` +
-              `&addressdetails=1`;
+        const url =
+          `https://nominatim.openstreetmap.org/search` +
+          `?format=json` +
+          `&q=${encodeURIComponent(searchQuery)}` +
+          `&countrycodes=uz` +
+          `&viewbox=${BUKHARA_BOUNDS.left},${BUKHARA_BOUNDS.top},${BUKHARA_BOUNDS.right},${BUKHARA_BOUNDS.bottom}` +
+          `&bounded=1` +
+          `&limit=6` +
+          `&accept-language=ru` +
+          `&addressdetails=1`;
 
-            const res =
-              await fetch(url, {
-                headers: {
-                  Accept:
-                    'application/json',
-                },
-              });
+        const res = await fetch(url, {
+          headers: {
+            Accept: 'application/json',
+          },
+        });
 
-            if (!res.ok) {
-              throw new Error(
-                `Search HTTP ${res.status}`
-              );
-            }
+        if (!res.ok) {
+          throw new Error(
+            `Search HTTP ${res.status}`
+          );
+        }
 
-            const data =
-              await res.json();
+        const data = await res.json();
 
-            setResults(
-              Array.isArray(data)
-                ? data
-                : []
-            );
+        setResults(Array.isArray(data) ? data : []);
 
-            setShowResults(true);
-          } catch (err) {
-            console.warn(
-              'Search error:',
-              err
-            );
+        setShowResults(true);
+      } catch (err) {
+        console.warn('Search error:', err);
 
-            setResults([]);
-            setShowResults(false);
-          } finally {
-            setSearching(false);
-          }
-        },
-        500
-      );
+        setResults([]);
+        setShowResults(false);
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
 
-    return () =>
-      clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, [query]);
 
   // ==========================================================
   // ВЫБОР РЕЗУЛЬТАТА ПОИСКА
   // ==========================================================
 
-  const handleSelectResult =
-    (result) => {
-      const lat =
-        Number(result.lat);
+  const handleSelectResult = (result) => {
+    // Скрываем подсказку
+    setShowLocateHint(false);
 
-      const lng =
-        Number(result.lon);
+    const lat = Number(result.lat);
+    const lng = Number(result.lon);
 
-      if (
-        !Number.isFinite(lat) ||
-        !Number.isFinite(lng)
-      ) {
-        return;
-      }
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng)
+    ) {
+      return;
+    }
 
-      // Ручной выбор
-      setAccuracy(null);
+    // Ручной выбор
+    setAccuracy(null);
 
-      setLocationMessage('');
+    setLocationMessage('');
 
-      // Устанавливаем позицию
-      setMarkerPosition(
-        lat,
-        lng,
-        {
-          flyTo: true,
-          zoom: 18,
-          findAddress: false,
-        }
-      );
+    // Устанавливаем позицию
+    setMarkerPosition(lat, lng, {
+      flyTo: true,
+      zoom: 18,
+      findAddress: false,
+    });
 
-      // Используем адрес из результата
-      if (
-        result.display_name &&
-        onAddressFound
-      ) {
-        onAddressFound(
-          result.display_name
-        );
-      }
+    // Используем адрес из результата
+    if (result.display_name && onAddressFound) {
+      onAddressFound(result.display_name);
+    }
 
-      // Очищаем поиск
-      setQuery('');
+    // Очищаем поиск
+    setQuery('');
 
-      setResults([]);
+    setResults([]);
 
-      setShowResults(false);
-    };
+    setShowResults(false);
+  };
 
   // ==========================================================
   // CLEAR SEARCH
@@ -981,11 +839,8 @@ export default function LocationMap({
 
   return (
     <div
-      className={`map-wrapper ${
-        fullscreen
-          ? 'map-wrapper--fullscreen'
-          : ''
-      }`}
+      className={`map-wrapper ${fullscreen ? 'map-wrapper--fullscreen' : ''
+        }`}
     >
       {/* =====================================================
           SEARCH BAR
@@ -1000,14 +855,9 @@ export default function LocationMap({
             className="map-search__input"
             placeholder="Введите адрес, улицу или место..."
             value={query}
-            onChange={(e) =>
-              setQuery(
-                e.target.value
-              )
-            }
+            onChange={(e) => setQuery(e.target.value)}
             onFocus={() =>
-              results.length > 0 &&
-              setShowResults(true)
+              results.length > 0 && setShowResults(true)
             }
             autoComplete="off"
           />
@@ -1016,19 +866,16 @@ export default function LocationMap({
             <span className="map-search__spinner" />
           )}
 
-          {query &&
-            !searching && (
-              <button
-                type="button"
-                className="map-search__clear"
-                onClick={
-                  clearSearch
-                }
-                aria-label="Очистить"
-              >
-                <FaTimes />
-              </button>
-            )}
+          {query && !searching && (
+            <button
+              type="button"
+              className="map-search__clear"
+              onClick={clearSearch}
+              aria-label="Очистить"
+            >
+              <FaTimes />
+            </button>
+          )}
         </div>
 
         {/* ===================================================
@@ -1037,14 +884,11 @@ export default function LocationMap({
 
         <button
           type="button"
-          className={`map-search__locate ${
-            locating
+          className={`map-search__locate ${locating
               ? 'map-search__locate--loading'
               : ''
-          }`}
-          onClick={
-            handleMyLocation
-          }
+            }`}
+          onClick={handleMyLocation}
           disabled={locating}
           title="Моё местоположение"
           aria-label="Моё местоположение"
@@ -1063,63 +907,87 @@ export default function LocationMap({
         <button
           type="button"
           className="map-search__fullscreen"
-          onClick={() =>
-            setFullscreen(
-              (v) => !v
-            )
-          }
+          onClick={() => setFullscreen((v) => !v)}
           title={
-            fullscreen
-              ? 'Свернуть'
-              : 'На весь экран'
+            fullscreen ? 'Свернуть' : 'На весь экран'
           }
           aria-label={
-            fullscreen
-              ? 'Свернуть'
-              : 'На весь экран'
+            fullscreen ? 'Свернуть' : 'На весь экран'
           }
         >
-          {fullscreen ? (
-            <FaCompress />
-          ) : (
-            <FaExpand />
-          )}
+          {fullscreen ? <FaCompress /> : <FaExpand />}
         </button>
       </div>
+
+      {/* =====================================================
+          ПОДСКАЗКА — нажмите на кнопку геолокации
+      ====================================================== */}
+
+      {showLocateHint && !locating && (
+        <div
+          className="map-locate-hint"
+          onClick={handleMyLocation}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleMyLocation();
+            }
+          }}
+        >
+          <div className="map-locate-hint__icon">
+            <FaLocationArrow />
+          </div>
+
+          <div className="map-locate-hint__body">
+            <span className="map-locate-hint__title">
+              Определить адрес автоматически
+            </span>
+
+            <span className="map-locate-hint__subtitle">
+              Нажмите на кнопку{' '}
+              <FaLocationArrow className="map-locate-hint__inline-icon" />{' '}
+              справа от поиска
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="map-locate-hint__close"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowLocateHint(false);
+            }}
+            aria-label="Скрыть подсказку"
+          >
+            <FaTimes />
+          </button>
+        </div>
+      )}
 
       {/* =====================================================
           SEARCH RESULTS
       ====================================================== */}
 
-      {showResults &&
-        results.length > 0 && (
-          <div className="map-results">
-            {results.map(
-              (result) => (
-                <button
-                  key={
-                    result.place_id
-                  }
-                  type="button"
-                  className="map-results__item"
-                  onClick={() =>
-                    handleSelectResult(
-                      result
-                    )
-                  }
-                >
-                  <FaMapMarkerAlt className="map-results__icon" />
+      {showResults && results.length > 0 && (
+        <div className="map-results">
+          {results.map((result) => (
+            <button
+              key={result.place_id}
+              type="button"
+              className="map-results__item"
+              onClick={() => handleSelectResult(result)}
+            >
+              <FaMapMarkerAlt className="map-results__icon" />
 
-                  <span className="map-results__text">
-                    {
-                      result.display_name
-                    }
-                  </span>
-                </button>
-              )
-            )}
-          </div>
-        )}
+              <span className="map-results__text">
+                {result.display_name}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* =====================================================
           MAP
@@ -1138,9 +1006,7 @@ export default function LocationMap({
         <div className="map-location-message">
           <FaLocationArrow />
 
-          <span>
-            {locationMessage}
-          </span>
+          <span>{locationMessage}</span>
         </div>
       )}
 
@@ -1152,36 +1018,20 @@ export default function LocationMap({
         <FaMapMarkerAlt />
 
         <span>
-          {Number.isFinite(
-            Number(coords?.lat)
-          )
-            ? Number(
-                coords.lat
-              ).toFixed(5)
-            : BUKHARA_CENTER.lat.toFixed(
-                5
-              )}
+          {Number.isFinite(Number(coords?.lat))
+            ? Number(coords.lat).toFixed(5)
+            : BUKHARA_CENTER.lat.toFixed(5)}
 
           {', '}
 
-          {Number.isFinite(
-            Number(coords?.lng)
-          )
-            ? Number(
-                coords.lng
-              ).toFixed(5)
-            : BUKHARA_CENTER.lng.toFixed(
-                5
-              )}
+          {Number.isFinite(Number(coords?.lng))
+            ? Number(coords.lng).toFixed(5)
+            : BUKHARA_CENTER.lng.toFixed(5)}
 
           {accuracy !== null && (
             <>
               {' '}
-              • ±
-              {Math.round(
-                accuracy
-              )}{' '}
-              м
+              • ±{Math.round(accuracy)} м
             </>
           )}
         </span>

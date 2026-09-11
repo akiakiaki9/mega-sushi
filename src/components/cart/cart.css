@@ -1464,3 +1464,141 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =====================================================
+   LOCATE HINT — подсказка "нажмите на кнопку"
+   ===================================================== */
+.map-locate-hint {
+  position: absolute;
+  top: 76px;
+  left: 12px;
+  right: 12px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(255, 61, 61, 0.95), rgba(255, 100, 80, 0.95));
+  border-radius: 14px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 61, 61, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: locate-hint-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.map-locate-hint:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(255, 61, 61, 0.55);
+}
+
+.map-locate-hint:active {
+  transform: translateY(0) scale(0.99);
+}
+
+@keyframes locate-hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.map-locate-hint__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 16px;
+  animation: locate-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes locate-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+}
+
+.map-locate-hint__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map-locate-hint__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.map-locate-hint__subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  opacity: 0.9;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.map-locate-hint__inline-icon {
+  font-size: 9px;
+  opacity: 0.85;
+}
+
+.map-locate-hint__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.map-locate-hint__close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 600px) {
+  .map-locate-hint {
+    top: 68px;
+    left: 8px;
+    right: 8px;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .map-locate-hint__icon {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .map-locate-hint__title {
+    font-size: 12px;
+  }
+
+  .map-locate-hint__subtitle {
+    font-size: 10px;
+  }
+}
