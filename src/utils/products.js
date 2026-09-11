@@ -1,0 +1,485 @@
+// src/utils/products.js
+//
+// Структура товара:
+//   id           — уникальный идентификатор (используется в корзине)
+//   name         — название
+//   description  — короткое описание (показывается на карточке)
+//   fullDescription — полное описание (в модалке). Если нет — берётся description
+//   composition  — состав (для модалки)
+//   price        — цена в сумах
+//   pieces       — количество кусочков
+//   category     — 'rolls' | 'sets' | 'mini'
+//   badge        — 'Хит' | 'Новинка' | etc. (необязательно)
+//   image        — путь до картинки
+
+const PRODUCTS_RAW = [
+    // ================= ЗАПЕЧЁННЫЕ РОЛЛЫ =================
+    {
+        name: 'Запечённая Филадельфия',
+        description: 'Ролл с запечённым лососем',
+        composition: 'Лосось, сыр творожный, огурец',
+        price: 75000,
+        pieces: 8,
+        category: 'rolls',
+        badge: 'Хит',
+    },
+    {
+        name: 'Терияки запечённая',
+        description: 'Запечённый ролл с лососем и соусом терияки',
+        composition: 'Лосось терияки, сыр творожный, огурец',
+        price: 50000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Запечённый с тунцом',
+        description: 'Ролл с тунцом',
+        composition:
+            'Мясо тунца, кунжут, творожный сыр, соус унаги, розовый соус, огурец',
+        price: 53000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Техас ролл',
+        description: 'Ролл с лососем и угрём',
+        composition: 'Лосось, угорь, сыр творожный, огурец',
+        price: 75000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Монака ролл',
+        description: 'Жареный ролл с лососем',
+        composition: 'Лосось, сыр творожный, огурец, икра тобико',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Калифорния запечённая',
+        description: 'Ролл с крабом',
+        composition: 'Краб, майонез, икра тобико, огурец',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Запечённый с курицей',
+        description: 'Ролл с курицей',
+        composition: 'Куриное мясо, соус унаги, творожный сыр, огурец',
+        price: 35000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Филадельфия лайт',
+        description: 'Филадельфия с лососем',
+        composition: 'Лосось, творожный сыр, огурец',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Цезарь ролл',
+        description: 'Ролл с курицей',
+        composition: 'Курица, помидор, листья салата, сыр творожный',
+        price: 45000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Запечённый с угрём',
+        description: 'Ролл с угрём',
+        composition: 'Угорь, творожный сыр, огурец',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Запечённая Миди',
+        description: 'Ролл с мясом мидии',
+        composition: 'Мясо мидии, творожный сыр, соус унаги, огурец, сырный соус',
+        price: 52000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Окинава ролл',
+        description: 'Ролл с жареной креветкой',
+        composition:
+            'Креветка темпура, спайс соус, огурец, икра тобико, сыр творожный',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Итальяно ролл',
+        description: 'Запечённый ролл',
+        composition: 'Сыр творожный, сыр чеддар, сыр моцарелла',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Запечённый с креветкой',
+        description: 'Ролл с креветкой',
+        composition:
+            'Креветка, творожный сыр, розовый соус, соус унаги, огурец',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Лава ролл',
+        description: 'Ролл с крабом',
+        composition: 'Краб, сыр творожный, фирменный лава соус',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Калифорния',
+        description: 'Ролл с крабом',
+        composition: 'Краб, огурец, икра тобика',
+        price: 50000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Самурай',
+        description: 'Запечённый ролл с курицей',
+        composition: 'Сыр чеддар, курица, огурец, сыр творожный',
+        price: 50000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Запечённый Лосось',
+        description: 'Ролл с лососем',
+        composition: 'Лосось, творожный сыр, розовый соус, огурец',
+        price: 52000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Мексика',
+        description: 'Ролл с жареной креветкой',
+        composition: 'Темпурная креветка, икра тобика, огурец, спайс соус',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Филадельфия',
+        description: 'Классическая Филадельфия с лососем',
+        composition: 'Лосось, творожный сыр, огурец',
+        price: 75000,
+        pieces: 8,
+        category: 'rolls',
+        badge: 'Хит',
+    },
+    {
+        name: 'Калифорния сяке',
+        description: 'Калифорния с лососем',
+        composition: 'Лосось, огурец, икра тобика',
+        price: 65000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Канада',
+        description: 'Ролл с угрём',
+        composition: 'Угорь, творожный сыр, огурец, кунжут, соус унаги',
+        price: 75000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Кагвуасэ',
+        description: 'Ролл с жареным лососем',
+        composition: 'Лосось жареный, сыр творожный, лук зелёный, икра тобика',
+        price: 65000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Снежный краб',
+        description: 'Ролл с крабом',
+        composition: 'Краб, спайс соус',
+        price: 40000,
+        pieces: 8,
+        category: 'rolls',
+    },
+
+    // ================= ТЕМПУРА (ЖАРЕНЫЕ) =================
+    {
+        name: 'Тека темпура',
+        description: 'Жареный ролл с тунцом',
+        composition: 'Тунец, сыр творожный, огурец, спайс соус',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Калифорния темпура',
+        description: 'Жареный ролл с крабом',
+        composition: 'Краб, майонез, икра тобика, огурец',
+        price: 50000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Микс темпура',
+        description: 'Жареный ролл с крабом и курицей',
+        composition: 'Краб, курица, спайс соус, огурец',
+        price: 40000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Унаги темпура',
+        description: 'Жареный ролл с угрём',
+        composition: 'Угорь, сыр творожный, огурец',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Осака темпура',
+        description: 'Жареный ролл с королевской креветкой',
+        composition: 'Креветка жареная, сыр',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Филадельфия темпура',
+        description: 'Жареный ролл с лососем',
+        composition: 'Лосось, сыр творожный, огурец',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Тори темпура',
+        description: 'Жареный ролл с курицей',
+        composition: 'Курица, сыр творожный, огурец',
+        price: 35000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Токио темпура',
+        description: 'Жареный ролл с лососем и угрём',
+        composition: 'Угорь, лосось, сыр творожный',
+        price: 55000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Белоснежка',
+        description: 'Ролл с курицей и спайс соусом',
+        composition: 'Курица, сыр творожный, огурец, спайс соус',
+        price: 38000,
+        pieces: 8,
+        category: 'rolls',
+    },
+    {
+        name: 'Цезарь',
+        description: 'Ролл с курицей',
+        composition: 'Сыр творожный, помидор, лист салата, курица',
+        price: 40000,
+        pieces: 8,
+        category: 'rolls',
+    },
+
+    // ================= МИНИ-РОЛЛЫ =================
+    {
+        name: 'Унаги маки',
+        description: 'Мини-ролл с угрём',
+        composition: 'Угорь',
+        price: 40000,
+        pieces: 8,
+        category: 'mini',
+    },
+    {
+        name: 'Кани маки',
+        description: 'Мини-ролл с крабом',
+        composition: 'Краб, сыр творожный',
+        price: 35000,
+        pieces: 8,
+        category: 'mini',
+    },
+    {
+        name: 'Тека маки',
+        description: 'Мини-ролл с тунцом',
+        composition: 'Тунец',
+        price: 40000,
+        pieces: 8,
+        category: 'mini',
+    },
+    {
+        name: 'Каппа маки',
+        description: 'Мини-ролл с огурцом',
+        composition: 'Огурец, кунжут',
+        price: 20000,
+        pieces: 8,
+        category: 'mini',
+    },
+    {
+        name: 'Сяке маки',
+        description: 'Мини-ролл с лососем',
+        composition: 'Лосось',
+        price: 40000,
+        pieces: 8,
+        category: 'mini',
+    },
+
+    // ================= СЕТЫ =================
+    {
+        name: 'Куриный сет №1',
+        description: '40 кусочков',
+        composition:
+            'Запечённый куриный 1 шт, Микс темпура 2 шт, Самурай 1 шт, Острый курица 1 шт',
+        price: 150000,
+        pieces: 40,
+        category: 'sets',
+        badge: 'Хит',
+    },
+    {
+        name: 'Куриный сет №2',
+        description: '32 кусочка',
+        composition: 'Запечённый куриный 2 шт, Микс темпура 2 шт',
+        price: 115000,
+        pieces: 32,
+        category: 'sets',
+    },
+    {
+        name: 'Гонконг',
+        description: '24 кусочка',
+        composition:
+            'Креветки запечённые, Филадельфия темпура, Запечённый курица сырная шапочка',
+        price: 140000,
+        pieces: 24,
+        category: 'sets',
+    },
+    {
+        name: 'NEW YORK',
+        description: '40 кусочков',
+        composition:
+            'Филадельфия Лайт, Филадельфия темпура, Запечённый лосось, Запечённый курица, Каппа маки',
+        price: 205000,
+        pieces: 40,
+        category: 'sets',
+        badge: 'Новинка',
+    },
+    {
+        name: 'Королевский сет',
+        description: '48 кусочков',
+        composition:
+            'Филадельфия лайт 1 шт, Филадельфия классика 1 шт, Сяке темпура 1 шт, Токи Филадельфия 1 шт, Филадельфия запечённая, Филадельфия темпура',
+        price: 400000,
+        pieces: 48,
+        category: 'sets',
+        badge: 'Premium',
+    },
+    {
+        name: 'МЕГА СЕТ',
+        description: '20 кусочков',
+        composition:
+            'Запечённый куриный 5 шт, Запечённый краб 5 шт, Запечённый лосось 5 шт, Запечённый угорь 5 шт',
+        price: 120000,
+        pieces: 20,
+        category: 'sets',
+    },
+    {
+        name: 'Сет «Навруз»',
+        description: '32 кусочка',
+        composition:
+            'Филадельфия, Микс темпура, Терияки запечённый, Запечённый с курицей',
+        price: 155000,
+        pieces: 32,
+        category: 'sets',
+    },
+    {
+        name: 'Сет «Дежавю»',
+        description: '40 кусочков',
+        composition:
+            'Филадельфия, Запечённый курица, Калифорния запечённая, Калифорния запечённая с кунжутом, Терияки темпура',
+        price: 220000,
+        pieces: 40,
+        category: 'sets',
+    },
+    {
+        name: 'Мини сет',
+        description: '16 кусочков',
+        composition:
+            'Калифорния темпура 1/2, Тори темпура 1/2, Курица 1/2, Запечённый лосось 1/2',
+        price: 90000,
+        pieces: 16,
+        category: 'sets',
+    },
+    {
+        name: 'Сет Гоа',
+        description: '32 кусочка',
+        composition:
+            'Филадельфия Лайт, Запечённый курица, Калифорния запечённая, Запечённый тунец',
+        price: 155000,
+        pieces: 32,
+        category: 'sets',
+    },
+    {
+        name: 'Сет Венеция',
+        description: '32 кусочка',
+        composition:
+            'Филадельфия Лайт, Калифорния 1/2, Запечённый с курицей 1/2, Терияки темпура',
+        price: 120000,
+        pieces: 32,
+        category: 'sets',
+    },
+    {
+        name: 'Сет «Моя любимая Бухара»',
+        description: '40 кусочков',
+        composition:
+            'Филадельфия лайт, Микс темпура, Запечённый лосось, Запечённый угорь, Терияки запечённый',
+        price: 230000,
+        pieces: 40,
+        category: 'sets',
+        badge: 'Хит',
+    },
+    {
+        name: 'Корпоратив',
+        description: '48 кусочков',
+        composition:
+            'Филадельфия лайт, Жареный с лососем, Лава, Запечённая калифорния, Запечённые мидии, Запечённый куриный',
+        price: 270000,
+        pieces: 48,
+        category: 'sets',
+        badge: 'Premium',
+    },
+    {
+        name: 'Сакура сет',
+        description: '24 кусочка',
+        composition: 'Филадельфия лайт, Куриный запечённый, Микс темпура',
+        price: 115000,
+        pieces: 24,
+        category: 'sets',
+    },
+];
+
+// Генерируем id и путь к изображению автоматически
+export const PRODUCTS = PRODUCTS_RAW.map((p, index) => ({
+    ...p,
+    id: `p${index + 1}`,
+    fullDescription: p.fullDescription || p.description,
+    image: `/images/products/${index + 1}.JPG`,
+}));
+
+// Категории для будущего фильтра (сейчас не используются — можно включить позже)
+export const CATEGORIES = [
+    { id: 'all', label: 'Все' },
+    { id: 'rolls', label: 'Роллы' },
+    { id: 'mini', label: 'Мини-роллы' },
+    { id: 'sets', label: 'Сеты' },
+];
