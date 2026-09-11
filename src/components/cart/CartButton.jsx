@@ -1,25 +1,38 @@
 'use client';
 
-import { FaShoppingBag } from 'react-icons/fa';
+import { FaShoppingBag, FaArrowRight } from 'react-icons/fa';
 import { useCart } from '@/context/CartContext';
-import './cart.css';
+import './cart-button.css';
 
 export default function CartButton() {
     const { totalCount, totalPrice, openCart } = useCart();
-
-    if (totalCount === 0) return null;
+    const isEmpty = totalCount === 0;
 
     return (
-        <button className="cart-fab" onClick={openCart} aria-label="Открыть корзину">
+        <button
+            type="button"
+            className={`cart-fab ${isEmpty ? 'cart-fab--empty' : 'cart-fab--active'}`}
+            onClick={openCart}
+            aria-label={isEmpty ? 'Открыть корзину' : `Открыть корзину, товаров: ${totalCount}`}
+        >
             <span className="cart-fab__icon">
                 <FaShoppingBag />
-                <span className="cart-fab__badge">{totalCount}</span>
+                {!isEmpty && (
+                    <span className="cart-fab__badge">{totalCount}</span>
+                )}
             </span>
-            <span className="cart-fab__text">
+
+            <span className="cart-fab__body">
                 <span className="cart-fab__label">Корзина</span>
-                <span className="cart-fab__price">
-                    {totalPrice.toLocaleString()} сум
+                <span className="cart-fab__value">
+                    {isEmpty
+                        ? 'Пусто'
+                        : `${totalPrice.toLocaleString()} сум`}
                 </span>
+            </span>
+
+            <span className="cart-fab__arrow">
+                <FaArrowRight />
             </span>
         </button>
     );

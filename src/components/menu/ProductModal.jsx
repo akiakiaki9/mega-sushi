@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { FaPlus, FaMinus, FaTimes, FaUtensils } from 'react-icons/fa';
+import { FaPlus, FaMinus, FaTimes, FaUtensils, FaLayerGroup } from 'react-icons/fa';
 import { useCart } from '@/context/CartContext';
 import './menu.css';
 
@@ -53,6 +53,7 @@ export default function ProductModal({ product, onClose }) {
                     <FaTimes />
                 </button>
 
+                {/* ---------- Фото ---------- */}
                 <div className="product-modal__image">
                     <img src={product.image} alt={product.name} />
                     {product.badge && (
@@ -60,18 +61,31 @@ export default function ProductModal({ product, onClose }) {
                     )}
                 </div>
 
+                {/* ---------- Информация ---------- */}
                 <div className="product-modal__body">
-                    <h2 className="product-modal__title">{product.name}</h2>
+                    <div className="product-modal__head">
+                        <h2 className="product-modal__title">{product.name}</h2>
+
+                        {(product.pieces || product.weight) && (
+                            <div className="product-modal__meta">
+                                {product.pieces && (
+                                    <span className="product-modal__meta-item">
+                                        <FaLayerGroup />
+                                        {product.pieces} шт
+                                    </span>
+                                )}
+                                {product.weight && (
+                                    <span className="product-modal__meta-item">
+                                        {product.weight}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
                     {product.description && (
                         <p className="product-modal__short">{product.description}</p>
                     )}
-
-                    <div className="product-modal__meta">
-                        {product.pieces && <span>{product.pieces} шт</span>}
-                        {product.pieces && product.weight && <span className="dot">·</span>}
-                        {product.weight && <span>{product.weight}</span>}
-                    </div>
 
                     {product.composition && (
                         <div className="product-modal__composition">
@@ -83,6 +97,7 @@ export default function ProductModal({ product, onClose }) {
                         </div>
                     )}
 
+                    {/* ---------- Футер с ценой и кнопкой ---------- */}
                     <div className="product-modal__footer">
                         <div className="product-modal__price">
                             {product.price.toLocaleString()} <small>сум</small>

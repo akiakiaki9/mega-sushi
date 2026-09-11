@@ -1,7 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react';
+
 import L from 'leaflet';
+
 import {
   FaSearch,
   FaTimes,
@@ -10,6 +17,7 @@ import {
   FaCompress,
   FaMapMarkerAlt,
 } from 'react-icons/fa';
+
 import 'leaflet/dist/leaflet.css';
 
 // ============================================================
@@ -21,12 +29,22 @@ const BUKHARA_CENTER = {
   lng: 64.4286,
 };
 
+// Примерные границы города Бухара.
+// Используются только для ограничения поиска.
+const BUKHARA_BOUNDS = {
+  left: 64.25,
+  top: 39.90,
+  right: 64.55,
+  bottom: 39.65,
+};
+
 // ============================================================
 // Кастомный маркер
 // ============================================================
 
 const customIcon = L.divIcon({
   className: 'custom-marker',
+
   html: `
     <div class="custom-marker__pin">
       <svg
@@ -39,6 +57,7 @@ const customIcon = L.divIcon({
       </svg>
     </div>
   `,
+
   iconSize: [34, 34],
   iconAnchor: [17, 34],
 });
@@ -51,6 +70,10 @@ export default function LocationMap({
   coords,
   onPick,
   onAddressFound,
+
+  // Каждый новый locateRequest запускает геолокацию.
+  // Например: 1 -> 2 -> 3...
+  locateRequest = 0,
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -59,15 +82,27 @@ export default function LocationMap({
   // Защита от старых reverse-geocode запросов
   const requestIdRef = useRef(0);
 
-  // Чтобы внешняя синхронизация не возвращала старую точку
+  // Последняя установленная позиция
   const lastPositionRef = useRef(null);
+
+  // Чтобы не запускать один locateRequest дважды
+  const handledLocateRequestRef = useRef(0);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+
   const [fullscreen, setFullscreen] = useState(false);
   const [locating, setLocating] = useState(false);
+
+  // Точность последнего определения
+  const [accuracy, setAccuracy] = useState(null);
+
+  // Сообщение об ошибке/неточной геолокации
+  const [locationMessage, setLocationMessage] =
+    useState('');
 
   // ==========================================================
   // Получить нормальные координаты
@@ -113,22 +148,30 @@ export default function LocationMap({
         });
 
         if (!res.ok) {
-          throw new Error(`Reverse geocoding HTTP ${res.status}`);
+          throw new Error(
+            `Reverse geocoding HTTP ${res.status}`
+          );
         }
 
         const data = await res.json();
 
-        // Если за время запроса появилась более новая позиция
+        // За время запроса появилась более новая позиция
         if (myId !== requestIdRef.current) {
           return;
         }
 
-        if (data?.display_name && onAddressFound) {
+        if (
+          data?.display_name &&
+          onAddressFound
+        ) {
           onAddressFound(data.display_name);
         }
       } catch (err) {
         if (myId === requestIdRef.current) {
-          console.warn('Reverse geocode error:', err);
+          console.warn(
+            'Reverse geocode error:',
+            err
+          );
         }
       }
     },
@@ -152,7 +195,9 @@ export default function LocationMap({
       const map = mapRef.current;
       const marker = markerRef.current;
 
-      if (!map || !marker) return;
+      if (!map || !marker) {
+        return;
+      }
 
       const latitude = Number(lat);
       const longitude = Number(lng);
@@ -164,16 +209,19 @@ export default function LocationMap({
         return;
       }
 
-      // Запоминаем последнюю установленную позицию
+      // Запоминаем последнюю позицию
       lastPositionRef.current = {
         lat: latitude,
         lng: longitude,
       };
 
-      // Перемещаем маркер
-      marker.setLatLng([latitude, longitude]);
+      // Передвигаем маркер
+      marker.setLatLng([
+        latitude,
+        longitude,
+      ]);
 
-      // ВСЕГДА перемещаем карту к маркеру
+      // Передвигаем карту
       if (flyTo) {
         map.flyTo(
           [latitude, longitude],
@@ -194,17 +242,22 @@ export default function LocationMap({
       }
 
       // Передаём координаты родителю
-      onPick({
-        lat: latitude,
-        lng: longitude,
-      });
+      if (onPick) {
+        onPick({
+          lat: latitude,
+          lng: longitude,
+        });
+      }
 
       // Получаем адрес
       if (findAddress) {
-        reverseGeocode(latitude, longitude);
+        reverseGeocode(
+          latitude,
+          longitude
+        );
       }
 
-      // Пересчёт размеров карты
+      // Исправляем размеры карты
       setTimeout(() => {
         if (mapRef.current) {
           mapRef.current.invalidateSize();
@@ -215,390 +268,39 @@ export default function LocationMap({
   );
 
   // ==========================================================
-  // ИНИЦИАЛИЗАЦИЯ КАРТЫ
-  // ==========================================================
-
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) {
-      return;
-    }
-
-    const initialCoords = getValidCoords();
-
-    const map = L.map(containerRef.current, {
-      center: [
-        initialCoords.lat,
-        initialCoords.lng,
-      ],
-      zoom: 17,
-      zoomControl: false,
-      attributionControl: false,
-    });
-
-    // ========================================================
-    // Yandex tiles
-    // ========================================================
-
-    L.tileLayer(
-      'https://core-renderer-tiles.maps.yandex.net/tiles?l=map&v=21.06.06&x={x}&y={y}&z={z}&scale=1&lang=ru_RU',
-      {
-        maxZoom: 19,
-        subdomains: ['01', '02', '03', '04'],
-      }
-    ).addTo(map);
-
-    // ========================================================
-    // Zoom
-    // ========================================================
-
-    L.control
-      .zoom({
-        position: 'bottomright',
-      })
-      .addTo(map);
-
-    // ========================================================
-    // Marker
-    // ========================================================
-
-    const marker = L.marker(
-      [
-        initialCoords.lat,
-        initialCoords.lng,
-      ],
-      {
-        icon: customIcon,
-        draggable: true,
-      }
-    ).addTo(map);
-
-    // Запоминаем начальную позицию
-    lastPositionRef.current = initialCoords;
-
-    // ========================================================
-    // Перетаскивание маркера
-    // ========================================================
-
-    marker.on('dragend', () => {
-      const pos = marker.getLatLng();
-
-      const lat = pos.lat;
-      const lng = pos.lng;
-
-      lastPositionRef.current = {
-        lat,
-        lng,
-      };
-
-      onPick({
-        lat,
-        lng,
-      });
-
-      reverseGeocode(lat, lng);
-
-      // После перемещения маркера центрируем карту
-      map.flyTo(
-        [lat, lng],
-        Math.max(map.getZoom(), 18),
-        {
-          animate: true,
-          duration: 0.8,
-        }
-      );
-    });
-
-    // ========================================================
-    // Клик по карте
-    // ========================================================
-
-    map.on('click', (e) => {
-      const { lat, lng } = e.latlng;
-
-      lastPositionRef.current = {
-        lat,
-        lng,
-      };
-
-      marker.setLatLng([lat, lng]);
-
-      map.flyTo(
-        [lat, lng],
-        Math.max(map.getZoom(), 18),
-        {
-          animate: true,
-          duration: 0.8,
-        }
-      );
-
-      onPick({
-        lat,
-        lng,
-      });
-
-      reverseGeocode(lat, lng);
-    });
-
-    mapRef.current = map;
-    markerRef.current = marker;
-
-    // ========================================================
-    // Исправление размеров
-    // ========================================================
-
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
-
-    // ========================================================
-    // Cleanup
-    // ========================================================
-
-    return () => {
-      map.remove();
-
-      mapRef.current = null;
-      markerRef.current = null;
-      lastPositionRef.current = null;
-    };
-
-    // Инициализируем только один раз
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ==========================================================
-  // СИНХРОНИЗАЦИЯ С ВНЕШНИМИ COORDS
-  // ==========================================================
-
-  useEffect(() => {
-    const map = mapRef.current;
-    const marker = markerRef.current;
-
-    if (!map || !marker || !coords) {
-      return;
-    }
-
-    const lat = Number(coords.lat);
-    const lng = Number(coords.lng);
-
-    if (
-      !Number.isFinite(lat) ||
-      !Number.isFinite(lng)
-    ) {
-      return;
-    }
-
-    const current = marker.getLatLng();
-
-    const dist =
-      Math.abs(current.lat - lat) +
-      Math.abs(current.lng - lng);
-
-    // Координаты практически одинаковые
-    if (dist < 0.00001) {
-      return;
-    }
-
-    // Обновляем последнюю позицию
-    lastPositionRef.current = {
-      lat,
-      lng,
-    };
-
-    // Передвигаем маркер
-    marker.setLatLng([lat, lng]);
-
-    // И главное — передвигаем САМУ КАРТУ
-    map.flyTo(
-      [lat, lng],
-      18,
-      {
-        animate: true,
-        duration: 1,
-      }
-    );
-
-    setTimeout(() => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    }, 150);
-  }, [coords]);
-
-  // ==========================================================
-  // FULLSCREEN
-  // ==========================================================
-
-  useEffect(() => {
-    if (mapRef.current) {
-      setTimeout(() => {
-        mapRef.current.invalidateSize();
-      }, 250);
-    }
-  }, [fullscreen]);
-
-  // ==========================================================
-  // Блокировка scroll при fullscreen
-  // ==========================================================
-
-  useEffect(() => {
-    if (!fullscreen) {
-      return;
-    }
-
-    const scrollY = window.scrollY;
-
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        setFullscreen(false);
-      }
-    };
-
-    window.addEventListener('keydown', onKey);
-
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-
-      window.scrollTo(0, scrollY);
-
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [fullscreen]);
-
-  // ==========================================================
-  // ПОИСК АДРЕСА
-  // ==========================================================
-
-  useEffect(() => {
-    if (!query.trim() || query.trim().length < 3) {
-      setResults([]);
-      setShowResults(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setSearching(true);
-
-      try {
-        let searchQuery = query.trim();
-
-        // Если пользователь не написал Бухару,
-        // добавляем её автоматически.
-        const lowerQuery = searchQuery.toLowerCase();
-
-        const hasBukhara =
-          lowerQuery.includes('бухар') ||
-          lowerQuery.includes('bukhara');
-
-        if (!hasBukhara) {
-          searchQuery =
-            `${searchQuery}, Бухара, Узбекистан`;
-        }
-
-        const url =
-          `https://nominatim.openstreetmap.org/search` +
-          `?format=json` +
-          `&q=${encodeURIComponent(searchQuery)}` +
-          `&countrycodes=uz` +
-          `&limit=6` +
-          `&accept-language=ru` +
-          `&addressdetails=1`;
-
-        const res = await fetch(url, {
-          headers: {
-            Accept: 'application/json',
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error(`Search HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        setResults(Array.isArray(data) ? data : []);
-        setShowResults(true);
-      } catch (err) {
-        console.warn('Search error:', err);
-
-        setResults([]);
-        setShowResults(false);
-      } finally {
-        setSearching(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  // ==========================================================
-  // ВЫБОР РЕЗУЛЬТАТА ПОИСКА
-  // ==========================================================
-
-  const handleSelectResult = (result) => {
-    const lat = Number(result.lat);
-    const lng = Number(result.lon);
-
-    if (
-      !Number.isFinite(lat) ||
-      !Number.isFinite(lng)
-    ) {
-      return;
-    }
-
-    // Устанавливаем позицию
-    setMarkerPosition(lat, lng, {
-      flyTo: true,
-      zoom: 18,
-      findAddress: false,
-    });
-
-    // Используем адрес прямо из результата
-    if (
-      result.display_name &&
-      onAddressFound
-    ) {
-      onAddressFound(result.display_name);
-    }
-
-    // Очищаем поиск
-    setQuery('');
-    setResults([]);
-    setShowResults(false);
-  };
-
-  // ==========================================================
   // МОЁ МЕСТОПОЛОЖЕНИЕ
   // ==========================================================
 
-  const handleMyLocation = () => {
+  const handleMyLocation = useCallback(() => {
     if (!navigator.geolocation) {
+      setLocationMessage(
+        'Геолокация не поддерживается вашим браузером'
+      );
+
       alert(
         'Геолокация не поддерживается вашим браузером'
       );
+
       return;
     }
 
     setLocating(true);
+
+    setLocationMessage('');
+
+    // Пока определяем — очищаем старую точность
+    setAccuracy(null);
+
+    console.log(
+      'Начинаем определение местоположения...'
+    );
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const {
           latitude,
           longitude,
-          accuracy,
+          accuracy: gpsAccuracy,
         } = position.coords;
 
         console.log(
@@ -609,20 +311,59 @@ export default function LocationMap({
 
         console.log(
           'GPS accuracy:',
-          accuracy,
+          gpsAccuracy,
           'm'
         );
 
-        // Если браузер вернул очень плохую точность
-        if (accuracy > 1000) {
+        // Сохраняем точность
+        setAccuracy(gpsAccuracy);
+
+        // ====================================================
+        // Оценка точности
+        // ====================================================
+
+        if (gpsAccuracy <= 30) {
+          setLocationMessage(
+            `Местоположение определено точно: ±${Math.round(
+              gpsAccuracy
+            )} м`
+          );
+        } else if (gpsAccuracy <= 100) {
+          setLocationMessage(
+            `Точность определения: ±${Math.round(
+              gpsAccuracy
+            )} м`
+          );
+        } else if (gpsAccuracy <= 300) {
+          setLocationMessage(
+            `Точность геолокации около ±${Math.round(
+              gpsAccuracy
+            )} м. Уточните точку на карте.`
+          );
+
+          console.warn(
+            'Низкая точность геолокации:',
+            gpsAccuracy,
+            'м'
+          );
+        } else {
+          setLocationMessage(
+            `Геолокация определена неточно: ±${Math.round(
+              gpsAccuracy
+            )} м. Обязательно проверьте точку на карте.`
+          );
+
           console.warn(
             'Очень низкая точность геолокации:',
-            accuracy,
+            gpsAccuracy,
             'м'
           );
         }
 
-        // Перемещаем маркер + карту
+        // ====================================================
+        // Ставим маркер
+        // ====================================================
+
         setMarkerPosition(
           latitude,
           longitude,
@@ -653,13 +394,15 @@ export default function LocationMap({
 
         if (error.code === 2) {
           msg =
-            'GPS недоступен. Попробуйте ещё раз';
+            'Местоположение недоступно. Проверьте Wi-Fi и GPS.';
         }
 
         if (error.code === 3) {
           msg =
-            'Превышено время ожидания GPS';
+            'Превышено время ожидания геолокации. Попробуйте ещё раз.';
         }
+
+        setLocationMessage(msg);
 
         alert(msg);
 
@@ -667,16 +410,558 @@ export default function LocationMap({
       },
 
       {
+        // Просим максимально возможную точность
         enableHighAccuracy: true,
 
-        // Даём GPS больше времени
-        timeout: 20000,
+        // Даём браузеру достаточно времени
+        timeout: 30000,
 
-        // Не используем старое сохранённое положение
+        // Не использовать старую позицию
         maximumAge: 0,
       }
     );
-  };
+  }, [setMarkerPosition]);
+
+  // ==========================================================
+  // АВТОЗАПУСК ГЕОЛОКАЦИИ ИЗ CART
+  // ==========================================================
+
+  useEffect(() => {
+    if (!locateRequest) {
+      return;
+    }
+
+    if (
+      handledLocateRequestRef.current ===
+      locateRequest
+    ) {
+      return;
+    }
+
+    handledLocateRequestRef.current =
+      locateRequest;
+
+    // Карта должна уже существовать
+    if (!mapRef.current) {
+      return;
+    }
+
+    handleMyLocation();
+  }, [
+    locateRequest,
+    handleMyLocation,
+  ]);
+
+  // ==========================================================
+  // ИНИЦИАЛИЗАЦИЯ КАРТЫ
+  // ==========================================================
+
+  useEffect(() => {
+    if (
+      !containerRef.current ||
+      mapRef.current
+    ) {
+      return;
+    }
+
+    const initialCoords =
+      getValidCoords();
+
+    const map = L.map(
+      containerRef.current,
+      {
+        center: [
+          initialCoords.lat,
+          initialCoords.lng,
+        ],
+
+        zoom: 17,
+
+        zoomControl: false,
+
+        attributionControl: true,
+      }
+    );
+
+    // ========================================================
+    // CARTO VOYAGER
+    // ========================================================
+
+    L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      {
+        maxZoom: 20,
+
+        subdomains: 'abcd',
+
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      }
+    ).addTo(map);
+
+    // ========================================================
+    // ZOOM
+    // ========================================================
+
+    L.control
+      .zoom({
+        position: 'bottomright',
+      })
+      .addTo(map);
+
+    // ========================================================
+    // MARKER
+    // ========================================================
+
+    const marker = L.marker(
+      [
+        initialCoords.lat,
+        initialCoords.lng,
+      ],
+      {
+        icon: customIcon,
+        draggable: true,
+      }
+    ).addTo(map);
+
+    // Запоминаем начальную позицию
+    lastPositionRef.current =
+      initialCoords;
+
+    // ========================================================
+    // ПЕРЕТАСКИВАНИЕ МАРКЕРА
+    // ========================================================
+
+    marker.on(
+      'dragend',
+      () => {
+        const pos =
+          marker.getLatLng();
+
+        const lat = pos.lat;
+        const lng = pos.lng;
+
+        lastPositionRef.current = {
+          lat,
+          lng,
+        };
+
+        // При ручном выборе
+        // точность GPS больше не важна
+        setAccuracy(null);
+
+        setLocationMessage('');
+
+        if (onPick) {
+          onPick({
+            lat,
+            lng,
+          });
+        }
+
+        reverseGeocode(
+          lat,
+          lng
+        );
+
+        // Центрируем карту
+        map.flyTo(
+          [lat, lng],
+          Math.max(
+            map.getZoom(),
+            18
+          ),
+          {
+            animate: true,
+            duration: 0.8,
+          }
+        );
+      }
+    );
+
+    // ========================================================
+    // КЛИК ПО КАРТЕ
+    // ========================================================
+
+    map.on(
+      'click',
+      (e) => {
+        const {
+          lat,
+          lng,
+        } = e.latlng;
+
+        lastPositionRef.current = {
+          lat,
+          lng,
+        };
+
+        // Ручной выбор
+        setAccuracy(null);
+
+        setLocationMessage('');
+
+        marker.setLatLng([
+          lat,
+          lng,
+        ]);
+
+        map.flyTo(
+          [lat, lng],
+          Math.max(
+            map.getZoom(),
+            18
+          ),
+          {
+            animate: true,
+            duration: 0.8,
+          }
+        );
+
+        if (onPick) {
+          onPick({
+            lat,
+            lng,
+          });
+        }
+
+        reverseGeocode(
+          lat,
+          lng
+        );
+      }
+    );
+
+    // Сохраняем ссылки
+    mapRef.current = map;
+    markerRef.current = marker;
+
+    // ========================================================
+    // INVALIDATE SIZE
+    // ========================================================
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+    // ========================================================
+    // CLEANUP
+    // ========================================================
+
+    return () => {
+      map.remove();
+
+      mapRef.current = null;
+
+      markerRef.current = null;
+
+      lastPositionRef.current = null;
+    };
+
+    // Инициализация один раз
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ==========================================================
+  // СИНХРОНИЗАЦИЯ С ВНЕШНИМИ COORDS
+  // ==========================================================
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const marker = markerRef.current;
+
+    if (
+      !map ||
+      !marker ||
+      !coords
+    ) {
+      return;
+    }
+
+    const lat = Number(coords.lat);
+    const lng = Number(coords.lng);
+
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng)
+    ) {
+      return;
+    }
+
+    const current =
+      marker.getLatLng();
+
+    const dist =
+      Math.abs(
+        current.lat - lat
+      ) +
+      Math.abs(
+        current.lng - lng
+      );
+
+    // Практически одинаковые
+    if (dist < 0.00001) {
+      return;
+    }
+
+    lastPositionRef.current = {
+      lat,
+      lng,
+    };
+
+    marker.setLatLng([
+      lat,
+      lng,
+    ]);
+
+    map.flyTo(
+      [lat, lng],
+      18,
+      {
+        animate: true,
+        duration: 1,
+      }
+    );
+
+    setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 150);
+  }, [coords]);
+
+  // ==========================================================
+  // FULLSCREEN
+  // ==========================================================
+
+  useEffect(() => {
+    if (mapRef.current) {
+      setTimeout(() => {
+        mapRef.current.invalidateSize();
+      }, 250);
+    }
+  }, [fullscreen]);
+
+  // ==========================================================
+  // БЛОКИРОВКА SCROLL В FULLSCREEN
+  // ==========================================================
+
+  useEffect(() => {
+    if (!fullscreen) {
+      return;
+    }
+
+    const scrollY =
+      window.scrollY;
+
+    document.body.style.position =
+      'fixed';
+
+    document.body.style.top =
+      `-${scrollY}px`;
+
+    document.body.style.left =
+      '0';
+
+    document.body.style.right =
+      '0';
+
+    document.body.style.width =
+      '100%';
+
+    document.body.style.overflow =
+      'hidden';
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setFullscreen(false);
+      }
+    };
+
+    window.addEventListener(
+      'keydown',
+      onKey
+    );
+
+    return () => {
+      document.body.style.position =
+        '';
+
+      document.body.style.top =
+        '';
+
+      document.body.style.left =
+        '';
+
+      document.body.style.right =
+        '';
+
+      document.body.style.width =
+        '';
+
+      document.body.style.overflow =
+        '';
+
+      window.scrollTo(
+        0,
+        scrollY
+      );
+
+      window.removeEventListener(
+        'keydown',
+        onKey
+      );
+    };
+  }, [fullscreen]);
+
+  // ==========================================================
+  // ПОИСК АДРЕСА
+  // ==========================================================
+
+  useEffect(() => {
+    if (
+      !query.trim() ||
+      query.trim().length < 3
+    ) {
+      setResults([]);
+      setShowResults(false);
+
+      return;
+    }
+
+    const timer =
+      setTimeout(
+        async () => {
+          setSearching(true);
+
+          try {
+            let searchQuery =
+              query.trim();
+
+            const lowerQuery =
+              searchQuery.toLowerCase();
+
+            const hasBukhara =
+              lowerQuery.includes(
+                'бухар'
+              ) ||
+              lowerQuery.includes(
+                'bukhara'
+              );
+
+            if (!hasBukhara) {
+              searchQuery =
+                `${searchQuery}, Бухара, Узбекистан`;
+            }
+
+            const url =
+              `https://nominatim.openstreetmap.org/search` +
+              `?format=json` +
+              `&q=${encodeURIComponent(
+                searchQuery
+              )}` +
+              `&countrycodes=uz` +
+              `&viewbox=${BUKHARA_BOUNDS.left},${BUKHARA_BOUNDS.top},${BUKHARA_BOUNDS.right},${BUKHARA_BOUNDS.bottom}` +
+              `&bounded=1` +
+              `&limit=6` +
+              `&accept-language=ru` +
+              `&addressdetails=1`;
+
+            const res =
+              await fetch(url, {
+                headers: {
+                  Accept:
+                    'application/json',
+                },
+              });
+
+            if (!res.ok) {
+              throw new Error(
+                `Search HTTP ${res.status}`
+              );
+            }
+
+            const data =
+              await res.json();
+
+            setResults(
+              Array.isArray(data)
+                ? data
+                : []
+            );
+
+            setShowResults(true);
+          } catch (err) {
+            console.warn(
+              'Search error:',
+              err
+            );
+
+            setResults([]);
+            setShowResults(false);
+          } finally {
+            setSearching(false);
+          }
+        },
+        500
+      );
+
+    return () =>
+      clearTimeout(timer);
+  }, [query]);
+
+  // ==========================================================
+  // ВЫБОР РЕЗУЛЬТАТА ПОИСКА
+  // ==========================================================
+
+  const handleSelectResult =
+    (result) => {
+      const lat =
+        Number(result.lat);
+
+      const lng =
+        Number(result.lon);
+
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng)
+      ) {
+        return;
+      }
+
+      // Ручной выбор
+      setAccuracy(null);
+
+      setLocationMessage('');
+
+      // Устанавливаем позицию
+      setMarkerPosition(
+        lat,
+        lng,
+        {
+          flyTo: true,
+          zoom: 18,
+          findAddress: false,
+        }
+      );
+
+      // Используем адрес из результата
+      if (
+        result.display_name &&
+        onAddressFound
+      ) {
+        onAddressFound(
+          result.display_name
+        );
+      }
+
+      // Очищаем поиск
+      setQuery('');
+
+      setResults([]);
+
+      setShowResults(false);
+    };
 
   // ==========================================================
   // CLEAR SEARCH
@@ -684,7 +969,9 @@ export default function LocationMap({
 
   const clearSearch = () => {
     setQuery('');
+
     setResults([]);
+
     setShowResults(false);
   };
 
@@ -714,7 +1001,9 @@ export default function LocationMap({
             placeholder="Введите адрес, улицу или место..."
             value={query}
             onChange={(e) =>
-              setQuery(e.target.value)
+              setQuery(
+                e.target.value
+              )
             }
             onFocus={() =>
               results.length > 0 &&
@@ -727,16 +1016,19 @@ export default function LocationMap({
             <span className="map-search__spinner" />
           )}
 
-          {query && !searching && (
-            <button
-              type="button"
-              className="map-search__clear"
-              onClick={clearSearch}
-              aria-label="Очистить"
-            >
-              <FaTimes />
-            </button>
-          )}
+          {query &&
+            !searching && (
+              <button
+                type="button"
+                className="map-search__clear"
+                onClick={
+                  clearSearch
+                }
+                aria-label="Очистить"
+              >
+                <FaTimes />
+              </button>
+            )}
         </div>
 
         {/* ===================================================
@@ -750,7 +1042,9 @@ export default function LocationMap({
               ? 'map-search__locate--loading'
               : ''
           }`}
-          onClick={handleMyLocation}
+          onClick={
+            handleMyLocation
+          }
           disabled={locating}
           title="Моё местоположение"
           aria-label="Моё местоположение"
@@ -770,7 +1064,9 @@ export default function LocationMap({
           type="button"
           className="map-search__fullscreen"
           onClick={() =>
-            setFullscreen((v) => !v)
+            setFullscreen(
+              (v) => !v
+            )
           }
           title={
             fullscreen
@@ -795,26 +1091,35 @@ export default function LocationMap({
           SEARCH RESULTS
       ====================================================== */}
 
-      {showResults && results.length > 0 && (
-        <div className="map-results">
-          {results.map((result) => (
-            <button
-              key={result.place_id}
-              type="button"
-              className="map-results__item"
-              onClick={() =>
-                handleSelectResult(result)
-              }
-            >
-              <FaMapMarkerAlt className="map-results__icon" />
+      {showResults &&
+        results.length > 0 && (
+          <div className="map-results">
+            {results.map(
+              (result) => (
+                <button
+                  key={
+                    result.place_id
+                  }
+                  type="button"
+                  className="map-results__item"
+                  onClick={() =>
+                    handleSelectResult(
+                      result
+                    )
+                  }
+                >
+                  <FaMapMarkerAlt className="map-results__icon" />
 
-              <span className="map-results__text">
-                {result.display_name}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+                  <span className="map-results__text">
+                    {
+                      result.display_name
+                    }
+                  </span>
+                </button>
+              )
+            )}
+          </div>
+        )}
 
       {/* =====================================================
           MAP
@@ -826,6 +1131,20 @@ export default function LocationMap({
       />
 
       {/* =====================================================
+          LOCATION MESSAGE
+      ====================================================== */}
+
+      {locationMessage && (
+        <div className="map-location-message">
+          <FaLocationArrow />
+
+          <span>
+            {locationMessage}
+          </span>
+        </div>
+      )}
+
+      {/* =====================================================
           COORDINATES
       ====================================================== */}
 
@@ -833,13 +1152,38 @@ export default function LocationMap({
         <FaMapMarkerAlt />
 
         <span>
-          {Number.isFinite(Number(coords?.lat))
-            ? Number(coords.lat).toFixed(5)
-            : BUKHARA_CENTER.lat.toFixed(5)}
+          {Number.isFinite(
+            Number(coords?.lat)
+          )
+            ? Number(
+                coords.lat
+              ).toFixed(5)
+            : BUKHARA_CENTER.lat.toFixed(
+                5
+              )}
+
           {', '}
-          {Number.isFinite(Number(coords?.lng))
-            ? Number(coords.lng).toFixed(5)
-            : BUKHARA_CENTER.lng.toFixed(5)}
+
+          {Number.isFinite(
+            Number(coords?.lng)
+          )
+            ? Number(
+                coords.lng
+              ).toFixed(5)
+            : BUKHARA_CENTER.lng.toFixed(
+                5
+              )}
+
+          {accuracy !== null && (
+            <>
+              {' '}
+              • ±
+              {Math.round(
+                accuracy
+              )}{' '}
+              м
+            </>
+          )}
         </span>
       </div>
     </div>

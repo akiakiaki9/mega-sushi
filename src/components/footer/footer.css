@@ -1,70 +1,274 @@
 .footer {
     background: var(--bg-2);
     border-top: 1px solid var(--border);
-    padding: 60px 0 24px;
+    padding: 60px 0 100px;
+    /* снизу запас под FAB корзины */
     margin-top: 40px;
 }
 
+/* =====================================================
+   GRID
+   ===================================================== */
 .footer__inner {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 40px;
+    grid-template-columns: 2fr 1fr 1.4fr;
+    gap: 48px;
     margin-bottom: 40px;
 }
 
+/* =====================================================
+   BRAND COLUMN
+   ===================================================== */
+.footer__col--brand {
+    max-width: 360px;
+}
+
 .footer__logo {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 20px;
     font-weight: 800;
-    margin-bottom: 14px;
+    letter-spacing: -0.4px;
+    margin-bottom: 16px;
+    transition: opacity 0.2s;
+}
+
+.footer__logo:hover {
+    opacity: 0.85;
+}
+
+.footer__logo-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.footer__logo-text span {
+    color: var(--accent);
 }
 
 .footer__desc {
     color: var(--text-muted);
     font-size: 14px;
-    line-height: 1.6;
-    max-width: 340px;
+    line-height: 1.65;
+    margin-bottom: 16px;
 }
 
+.footer__hours {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 100px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.footer__hours svg {
+    color: var(--accent);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* =====================================================
+   COLUMNS
+   ===================================================== */
 .footer__col {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    min-width: 0;
 }
 
-.footer__col h4 {
-    font-size: 14px;
+.footer__title {
+    font-size: 13px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     color: var(--text);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
 }
 
-.footer__col a,
-.footer__col span {
+/* =====================================================
+   LINKS
+   ===================================================== */
+.footer__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-size: 14px;
     color: var(--text-muted);
+    line-height: 1.4;
     transition: color 0.2s;
+    word-break: break-word;
+    max-width: 100%;
 }
 
-.footer__col a:hover {
+.footer__link:hover {
     color: var(--accent);
 }
 
+.footer__link-icon {
+    color: var(--text-muted);
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.footer__link:hover .footer__link-icon {
+    color: var(--accent);
+}
+
+.footer__link--static {
+    cursor: default;
+}
+
+.footer__link--static:hover {
+    color: var(--text-muted);
+}
+
+.footer__link--static:hover .footer__link-icon {
+    color: var(--text-muted);
+}
+
+/* =====================================================
+   SOCIALS
+   ===================================================== */
+.footer__socials {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.footer__social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.footer__social:hover {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+/* =====================================================
+   BOTTOM
+   ===================================================== */
 .footer__bottom {
     padding-top: 24px;
     border-top: 1px solid var(--border);
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+
+.footer__copyright {
+    flex-shrink: 0;
+}
+
+.footer__dev {
     color: var(--text-muted);
     font-size: 13px;
 }
 
-@media (max-width: 768px) {
+.footer__dev a {
+    color: var(--text);
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.footer__dev a:hover {
+    color: var(--accent);
+}
+
+/* =====================================================
+   TABLET
+   ===================================================== */
+@media (max-width: 900px) {
+    .footer__inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 40px 32px;
+    }
+
+    .footer__col--brand {
+        grid-column: 1 / -1;
+        max-width: 100%;
+    }
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+@media (max-width: 600px) {
+    .footer {
+        padding: 40px 0 90px;
+        /* запас под FAB корзины на мобилке */
+        margin-top: 24px;
+    }
+
     .footer__inner {
         grid-template-columns: 1fr;
-        gap: 32px;
+        gap: 28px;
+        margin-bottom: 28px;
+    }
+
+    .footer__col--brand {
+        grid-column: auto;
+    }
+
+    .footer__logo {
+        font-size: 18px;
+    }
+
+    .footer__logo-img {
+        width: 36px;
+        height: 36px;
+    }
+
+    .footer__desc {
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .footer__title {
+        font-size: 12px;
+    }
+
+    .footer__link {
+        font-size: 13px;
+    }
+
+    .footer__social {
+        width: 40px;
+        height: 40px;
+        font-size: 15px;
+    }
+
+    .footer__bottom {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding-top: 20px;
+        font-size: 12px;
     }
 }
