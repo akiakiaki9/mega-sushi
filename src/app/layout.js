@@ -4,7 +4,7 @@ import { CartProvider } from '@/context/CartContext';
 import Footer from '@/components/footer/Footer';
 import Cart from '@/components/cart/Cart';
 
-const SITE_URL = 'https://megasushi.uz';
+const SITE_URL = 'https://www.megasushi.uz';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),

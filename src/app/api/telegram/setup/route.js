@@ -4,7 +4,7 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
 // 👇 Хардкод домена
-const SITE_URL = 'https://megasushi.uz';
+const SITE_URL = 'https://www.megasushi.uz';
 
 const SHORT_DESCRIPTION =
     '🍣 Mega Sushi — доставка суши и роллов в Бухаре. Работаем с 10:00 до 02:00.';

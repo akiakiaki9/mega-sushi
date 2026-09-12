@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
-const SITE_URL = 'https://megasushi.uz';
+const SITE_URL = 'https://www.megasushi.uz';
 
 // ==================== ДАННЫЕ ====================
 const INFO = {
