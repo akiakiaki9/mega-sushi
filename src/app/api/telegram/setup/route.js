@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
-// ==================== ОПИСАНИЯ БОТА ====================
+// 👇 Хардкод домена
+const SITE_URL = 'https://megasushi.uz';
+
 const SHORT_DESCRIPTION =
     '🍣 Mega Sushi — доставка суши и роллов в Бухаре. Работаем с 10:00 до 02:00.';
 
@@ -52,13 +53,6 @@ export async function GET(request) {
 
     // ---------- SET ----------
     if (action === 'set') {
-        if (!SITE_URL) {
-            return NextResponse.json(
-                { ok: false, error: 'SITE_URL not configured' },
-                { status: 500 }
-            );
-        }
-
         const webhookUrl = `${SITE_URL}/api/telegram/webhook`;
 
         const webhook = await tg('setWebhook', {
