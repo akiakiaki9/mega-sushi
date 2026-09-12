@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { FaTruck, FaClock, FaLeaf, FaPhoneAlt, FaUtensils } from 'react-icons/fa';
 import './hero.css';
 
@@ -60,12 +59,9 @@ export default function Hero() {
 
         <div className="hero__image">
           <div className="hero__image-glow" aria-hidden="true"></div>
-          <Image
+          <img
             src="/images/hero.PNG"
             alt="Свежие суши Mega Sushi"
-            width={640}
-            height={640}
-            priority
             className="hero__image-img"
           />
         </div>
