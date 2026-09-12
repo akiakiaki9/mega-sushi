@@ -16,8 +16,6 @@ import {
     FaTruck,
     FaCommentAlt,
     FaLocationArrow,
-    FaEdit,
-    FaSpinner,
 } from 'react-icons/fa';
 
 import { useCart } from '@/context/CartContext';
@@ -33,15 +31,6 @@ const LocationMap = dynamic(() => import('./LocationMap'), {
         </div>
     ),
 });
-
-/*
-|--------------------------------------------------------------------------
-| ЦЕНТР БУХАРЫ
-|--------------------------------------------------------------------------
-|
-| Это именно стартовая точка карты.
-|
-*/
 
 const DEFAULT_COORDS = {
     lat: 39.7747,
@@ -63,12 +52,6 @@ export default function Cart() {
         totalCount,
     } = useCart();
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM
-    |--------------------------------------------------------------------------
-    */
-
     const [form, setForm] = useState({
         name: '',
         phone: '',
@@ -76,12 +59,6 @@ export default function Cart() {
         type: 'delivery',
         comment: '',
     });
-
-    /*
-    |--------------------------------------------------------------------------
-    | COORDINATES
-    |--------------------------------------------------------------------------
-    */
 
     const [coords, setCoords] = useState(DEFAULT_COORDS);
 
@@ -91,11 +68,8 @@ export default function Cart() {
 
     const [error, setError] = useState('');
 
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE FORM
-    |--------------------------------------------------------------------------
-    */
+    // Счётчик для запуска GPS в LocationMap
+    const [locateRequest, setLocateRequest] = useState(0);
 
     const update = (key, value) => {
         setForm((prev) => ({
@@ -103,12 +77,6 @@ export default function Cart() {
             [key]: value,
         }));
     };
-
-    /*
-    |--------------------------------------------------------------------------
-    | ОТКРЫТИЕ / ЗАКРЫТИЕ КОРЗИНЫ
-    |--------------------------------------------------------------------------
-    */
 
     useEffect(() => {
         if (!isOpen) {
@@ -125,69 +93,35 @@ export default function Cart() {
         }
     }, [isOpen, status]);
 
-    /*
-    |--------------------------------------------------------------------------
-    | ОТКРЫТЬ КАРТУ
-    |--------------------------------------------------------------------------
-    */
-
-    const openMap = () => {
+    /* Открыть карту + сразу запустить GPS */
+    const openMapAndLocate = () => {
         setError('');
         setShowMap(true);
+        setLocateRequest((v) => v + 1);
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | ВЫБОР ТОЧКИ НА КАРТЕ
-    |--------------------------------------------------------------------------
-    */
-
     const handlePick = (newCoords) => {
-        if (!newCoords) {
-            return;
-        }
+        if (!newCoords) return;
 
         const lat = Number(newCoords.lat);
         const lng = Number(newCoords.lng);
 
-        if (
-            !Number.isFinite(lat) ||
-            !Number.isFinite(lng)
-        ) {
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
             return;
         }
 
-        setCoords({
-            lat,
-            lng,
-        });
+        setCoords({ lat, lng });
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | ПОЛУЧЕН АДРЕС ОТ КАРТЫ
-    |--------------------------------------------------------------------------
-    */
-
     const handleAddressFound = (address) => {
-        if (!address) {
-            return;
-        }
+        if (!address) return;
 
         update('address', address);
         setError('');
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
     const submit = async (e) => {
-        if (e) {
-            e.preventDefault();
-        }
+        if (e) e.preventDefault();
 
         if (!form.name.trim()) {
             setError('Укажите ваше имя');
@@ -199,10 +133,7 @@ export default function Cart() {
             return;
         }
 
-        if (
-            form.type === 'delivery' &&
-            !form.address.trim()
-        ) {
+        if (form.type === 'delivery' && !form.address.trim()) {
             setError(
                 'Определите адрес доставки или выберите точку на карте'
             );
@@ -219,10 +150,7 @@ export default function Cart() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    customer: {
-                        ...form,
-                        coords,
-                    },
+                    customer: { ...form, coords },
                     items,
                     totalPrice,
                     totalCount,
@@ -234,14 +162,11 @@ export default function Cart() {
             }
 
             setStatus('success');
-
             clear();
 
             setTimeout(() => {
                 setStatus('idle');
-
                 closeCart();
-
                 setForm({
                     name: '',
                     phone: '',
@@ -249,59 +174,38 @@ export default function Cart() {
                     type: 'delivery',
                     comment: '',
                 });
-
                 setCoords(DEFAULT_COORDS);
-
                 setShowMap(false);
+                setLocateRequest(0);
             }, 3200);
         } catch (err) {
             console.error(err);
-
             setStatus('error');
-
             setError(
                 'Не удалось отправить заказ. Позвоните: +998 99 120 27 00'
             );
         }
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER
-    |--------------------------------------------------------------------------
-    */
-
     return (
         <>
             <CartButton />
 
             {isOpen && (
-                <div
-                    className="cart-overlay"
-                    onClick={closeCart}
-                >
+                <div className="cart-overlay" onClick={closeCart}>
                     <div
                         className="cart"
-                        onClick={(e) =>
-                            e.stopPropagation()
-                        }
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        {/* ==================================================
-                            HEADER
-                        ================================================== */}
-
+                        {/* HEADER */}
                         <div className="cart__header">
                             <h2 className="cart__title">
-                                {status === 'success'
-                                    ? 'Готово!'
-                                    : 'Корзина'}
-
-                                {status !== 'success' &&
-                                    totalCount > 0 && (
-                                        <span className="cart__title-count">
-                                            {totalCount}
-                                        </span>
-                                    )}
+                                {status === 'success' ? 'Готово!' : 'Корзина'}
+                                {status !== 'success' && totalCount > 0 && (
+                                    <span className="cart__title-count">
+                                        {totalCount}
+                                    </span>
+                                )}
                             </h2>
 
                             <button
@@ -313,28 +217,18 @@ export default function Cart() {
                             </button>
                         </div>
 
-                        {/* ==================================================
-                            BODY
-                        ================================================== */}
-
+                        {/* BODY */}
                         <div className="cart__body">
                             {status === 'success' ? (
                                 <div className="cart__success">
                                     <div className="cart__success-icon">
                                         <FaCheckCircle />
                                     </div>
-
-                                    <h3>
-                                        Заказ отправлен!
-                                    </h3>
-
+                                    <h3>Заказ отправлен!</h3>
                                     <p>
-                                        Мы свяжемся с вами
-                                        в ближайшее время
-                                        для подтверждения
-                                        заказа.
+                                        Мы свяжемся с вами в ближайшее время
+                                        для подтверждения заказа.
                                     </p>
-
                                     <span className="cart__success-phone">
                                         +998 99 120 27 00
                                     </span>
@@ -344,15 +238,8 @@ export default function Cart() {
                                     <div className="cart__empty-icon">
                                         <FaShoppingBag />
                                     </div>
-
-                                    <p>
-                                        Корзина пуста
-                                    </p>
-
-                                    <span>
-                                        Добавьте блюда из меню
-                                    </span>
-
+                                    <p>Корзина пуста</p>
+                                    <span>Добавьте блюда из меню</span>
                                     <button
                                         className="cart__empty-btn"
                                         onClick={closeCart}
@@ -362,10 +249,7 @@ export default function Cart() {
                                 </div>
                             ) : (
                                 <>
-                                    {/* ==================================================
-                                        PRODUCTS
-                                    ================================================== */}
-
+                                    {/* PRODUCTS */}
                                     <div className="cart__items">
                                         {items.map((item) => (
                                             <div
@@ -382,38 +266,21 @@ export default function Cart() {
                                                     <h4 className="cart-item__name">
                                                         {item.name}
                                                     </h4>
-
                                                     <span className="cart-item__price">
-                                                        {(
-                                                            item.price *
-                                                            item.qty
-                                                        ).toLocaleString()}{' '}
-                                                        сум
+                                                        {(item.price * item.qty).toLocaleString()} сум
                                                     </span>
                                                 </div>
 
                                                 <div className="cart-item__controls">
                                                     <button
-                                                        onClick={() =>
-                                                            decrement(
-                                                                item.id
-                                                            )
-                                                        }
+                                                        onClick={() => decrement(item.id)}
                                                         aria-label="Уменьшить"
                                                     >
                                                         <FaMinus />
                                                     </button>
-
-                                                    <span>
-                                                        {item.qty}
-                                                    </span>
-
+                                                    <span>{item.qty}</span>
                                                     <button
-                                                        onClick={() =>
-                                                            increment(
-                                                                item.id
-                                                            )
-                                                        }
+                                                        onClick={() => increment(item.id)}
                                                         aria-label="Увеличить"
                                                     >
                                                         <FaPlus />
@@ -422,11 +289,7 @@ export default function Cart() {
 
                                                 <button
                                                     className="cart-item__remove"
-                                                    onClick={() =>
-                                                        removeItem(
-                                                            item.id
-                                                        )
-                                                    }
+                                                    onClick={() => removeItem(item.id)}
                                                     aria-label="Удалить"
                                                 >
                                                     <FaTrash />
@@ -440,153 +303,82 @@ export default function Cart() {
                                             type="button"
                                         >
                                             <FaTrash />
-
-                                            <span>
-                                                Очистить корзину
-                                            </span>
+                                            <span>Очистить корзину</span>
                                         </button>
                                     </div>
 
-                                    {/* ==================================================
-                                        FORM
-                                    ================================================== */}
-
-                                    <form
-                                        className="cart__form"
-                                        onSubmit={submit}
-                                    >
+                                    {/* FORM */}
+                                    <form className="cart__form" onSubmit={submit}>
                                         {/* DELIVERY / PICKUP */}
-
                                         <div className="cart__form-tabs">
                                             <button
                                                 type="button"
-                                                className={`cart__tab ${
-                                                    form.type ===
-                                                    'delivery'
-                                                        ? 'active'
-                                                        : ''
-                                                }`}
-                                                onClick={() =>
-                                                    update(
-                                                        'type',
-                                                        'delivery'
-                                                    )
-                                                }
+                                                className={`cart__tab ${form.type === 'delivery' ? 'active' : ''}`}
+                                                onClick={() => update('type', 'delivery')}
                                             >
                                                 <FaTruck />
-
-                                                <span>
-                                                    Доставка
-                                                </span>
+                                                <span>Доставка</span>
                                             </button>
-
                                             <button
                                                 type="button"
-                                                className={`cart__tab ${
-                                                    form.type ===
-                                                    'pickup'
-                                                        ? 'active'
-                                                        : ''
-                                                }`}
-                                                onClick={() =>
-                                                    update(
-                                                        'type',
-                                                        'pickup'
-                                                    )
-                                                }
+                                                className={`cart__tab ${form.type === 'pickup' ? 'active' : ''}`}
+                                                onClick={() => update('type', 'pickup')}
                                             >
                                                 <FaStore />
-
-                                                <span>
-                                                    Самовывоз
-                                                </span>
+                                                <span>Самовывоз</span>
                                             </button>
                                         </div>
 
                                         {/* NAME */}
-
                                         <div className="cart__field">
                                             <FaUser className="cart__field-icon" />
-
                                             <input
                                                 type="text"
                                                 placeholder="Ваше имя"
                                                 value={form.name}
-                                                onChange={(e) =>
-                                                    update(
-                                                        'name',
-                                                        e.target.value
-                                                    )
-                                                }
+                                                onChange={(e) => update('name', e.target.value)}
                                                 autoComplete="name"
                                             />
                                         </div>
 
                                         {/* PHONE */}
-
                                         <div className="cart__field">
                                             <FaPhoneAlt className="cart__field-icon" />
-
                                             <input
                                                 type="tel"
                                                 placeholder="+998 __ ___ __ __"
                                                 value={form.phone}
-                                                onChange={(e) =>
-                                                    update(
-                                                        'phone',
-                                                        e.target.value
-                                                    )
-                                                }
+                                                onChange={(e) => update('phone', e.target.value)}
                                                 autoComplete="tel"
                                             />
                                         </div>
 
-                                        {/* ==================================================
-                                            DELIVERY
-                                        ================================================== */}
-
-                                        {form.type ===
-                                        'delivery' ? (
+                                        {/* DELIVERY */}
+                                        {form.type === 'delivery' ? (
                                             <>
                                                 <div className="cart__address">
                                                     <div className="cart__address-label">
                                                         <FaMapMarkerAlt />
-
-                                                        <span>
-                                                            Адрес доставки
-                                                        </span>
+                                                        <span>Адрес доставки</span>
                                                     </div>
 
                                                     {form.address ? (
                                                         <div className="cart__address-value">
-                                                            <span>
-                                                                {
-                                                                    form.address
-                                                                }
-                                                            </span>
+                                                            <span>{form.address}</span>
                                                         </div>
                                                     ) : (
                                                         <div className="cart__address-empty">
-                                                            Определите
-                                                            адрес или
-                                                            выберите
-                                                            точку на
-                                                            карте
+                                                            Определите адрес или выберите точку на карте
                                                         </div>
                                                     )}
 
                                                     <div className="cart__address-actions">
-                                                        {/* GPS теперь находится внутри LocationMap */}
-
                                                         <button
                                                             type="button"
                                                             className="cart__address-btn cart__address-btn--primary"
-                                                            onClick={
-                                                                openMap
-                                                            }
+                                                            onClick={openMapAndLocate}
                                                         >
                                                             <FaLocationArrow />
-
                                                             <span>
                                                                 {form.address
                                                                     ? 'Изменить местоположение'
@@ -594,56 +386,27 @@ export default function Cart() {
                                                             </span>
                                                         </button>
 
-                                                        <button
-                                                            type="button"
-                                                            className="cart__address-btn cart__address-btn--ghost"
-                                                            onClick={() =>
-                                                                setShowMap(
-                                                                    (v) =>
-                                                                        !v
-                                                                )
-                                                            }
-                                                        >
-                                                            {showMap ? (
-                                                                <>
-                                                                    <FaTimes />
-
-                                                                    <span>
-                                                                        Скрыть
-                                                                        карту
-                                                                    </span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <FaEdit />
-
-                                                                    <span>
-                                                                        Выбрать
-                                                                        на
-                                                                        карте
-                                                                    </span>
-                                                                </>
-                                                            )}
-                                                        </button>
+                                                        {showMap && (
+                                                            <button
+                                                                type="button"
+                                                                className="cart__address-btn cart__address-btn--ghost"
+                                                                onClick={() => setShowMap(false)}
+                                                            >
+                                                                <FaTimes />
+                                                                <span>Скрыть карту</span>
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
 
-                                                {/* ==================================================
-                                                    MAP
-                                                ================================================== */}
-
+                                                {/* MAP */}
                                                 {showMap && (
                                                     <div className="cart__map">
                                                         <LocationMap
-                                                            coords={
-                                                                coords
-                                                            }
-                                                            onPick={
-                                                                handlePick
-                                                            }
-                                                            onAddressFound={
-                                                                handleAddressFound
-                                                            }
+                                                            coords={coords}
+                                                            onPick={handlePick}
+                                                            onAddressFound={handleAddressFound}
+                                                            locateRequest={locateRequest}
                                                         />
                                                     </div>
                                                 )}
@@ -651,95 +414,57 @@ export default function Cart() {
                                         ) : (
                                             <div className="cart__pickup-info">
                                                 <FaStore />
-
                                                 <div>
-                                                    <strong>
-                                                        Самовывоз
-                                                    </strong>
-
-                                                    <span>
-                                                        {
-                                                            DEFAULT_ADDRESS
-                                                        }
-                                                    </span>
+                                                    <strong>Самовывоз</strong>
+                                                    <span>{DEFAULT_ADDRESS}</span>
                                                 </div>
                                             </div>
                                         )}
 
                                         {/* COMMENT */}
-
                                         <div className="cart__field cart__field--textarea">
                                             <FaCommentAlt className="cart__field-icon" />
-
                                             <textarea
                                                 placeholder="Комментарий к заказу"
-                                                value={
-                                                    form.comment
-                                                }
-                                                onChange={(e) =>
-                                                    update(
-                                                        'comment',
-                                                        e.target.value
-                                                    )
-                                                }
+                                                value={form.comment}
+                                                onChange={(e) => update('comment', e.target.value)}
                                                 rows={2}
                                             />
                                         </div>
 
                                         {error && (
-                                            <div className="cart__error">
-                                                {error}
-                                            </div>
+                                            <div className="cart__error">{error}</div>
                                         )}
                                     </form>
                                 </>
                             )}
                         </div>
 
-                        {/* ==================================================
-                            FOOTER
-                        ================================================== */}
-
-                        {items.length > 0 &&
-                            status !== 'success' && (
-                                <div className="cart__footer">
-                                    <div className="cart__total">
-                                        <span>
-                                            Итого
-                                        </span>
-
-                                        <strong>
-                                            {totalPrice.toLocaleString()}{' '}
-                                            сум
-                                        </strong>
-                                    </div>
-
-                                    <button
-                                        className="cart__submit"
-                                        onClick={submit}
-                                        disabled={
-                                            status ===
-                                            'sending'
-                                        }
-                                        type="button"
-                                    >
-                                        {status ===
-                                        'sending' ? (
-                                            <>
-                                                <span className="cart__spinner" />
-
-                                                <span>
-                                                    Отправляем...
-                                                </span>
-                                            </>
-                                        ) : (
-                                            <span>
-                                                Оформить заказ
-                                            </span>
-                                        )}
-                                    </button>
+                        {/* FOOTER */}
+                        {items.length > 0 && status !== 'success' && (
+                            <div className="cart__footer">
+                                <div className="cart__total">
+                                    <span>Итого</span>
+                                    <strong>{totalPrice.toLocaleString()} сум</strong>
                                 </div>
-                            )}
+
+                                <button
+                                    className="cart__submit"
+                                    onClick={submit}
+                                    disabled={status === 'sending'}
+                                    type="button"
+                                >
+                                    {status === 'sending' ? (
+                                        <>
+                                            <span className="cart__spinner" />
+                                            <span>Отправляем...</span>
+                                        </>
+                                    ) : (
+                                        <span>Оформить заказ</span>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
