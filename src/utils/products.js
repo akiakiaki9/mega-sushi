@@ -454,7 +454,7 @@ export const PRODUCTS = PRODUCTS_RAW.map((p, index) => ({
   ...p,
   id: `p${index + 1}`,
   fullDescription: p.fullDescription || p.description,
-  image: `/images/products/${index + 1}.JPG`,
+  image: `/images/products/${index + 1}.1.png`,
 }));
 
 export const CATEGORIES = [
