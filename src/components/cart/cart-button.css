@@ -1,0 +1,265 @@
+/* =====================================================
+   CART FAB — всегда видимая кнопка корзины
+   ===================================================== */
+
+.cart-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 90;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 12px 18px 12px 14px;
+    border-radius: 100px;
+    border: 1px solid transparent;
+
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.25s ease,
+        border-color 0.25s ease;
+    animation: cart-fab-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cart-fab-in {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.85);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ---------- Иконка с бейджем ---------- */
+.cart-fab__icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: background 0.25s ease;
+}
+
+.cart-fab__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badge-pop {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+/* ---------- Текстовая часть ---------- */
+.cart-fab__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+}
+
+.cart-fab__label {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.8;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.cart-fab__value {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+}
+
+/* ---------- Стрелка ---------- */
+.cart-fab__arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0.75;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.cart-fab:hover .cart-fab__arrow {
+    transform: translateX(3px);
+    opacity: 1;
+}
+
+/* =====================================================
+   СОСТОЯНИЯ
+   ===================================================== */
+
+/* ---------- Пустая корзина — приглушённая ---------- */
+.cart-fab--empty {
+    background: var(--bg-2);
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+
+.cart-fab--empty .cart-fab__icon {
+    background: var(--bg-3);
+    color: var(--text);
+}
+
+.cart-fab--empty .cart-fab__value {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.cart-fab--empty:hover {
+    background: var(--bg-3);
+    border-color: #333;
+    color: var(--text);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.cart-fab--empty:hover .cart-fab__icon {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* ---------- Активная корзина — яркая ---------- */
+.cart-fab--active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 12px 32px rgba(255, 61, 61, 0.5);
+}
+
+.cart-fab--active .cart-fab__icon {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.cart-fab--active:hover {
+    background: var(--accent-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 18px 44px rgba(255, 61, 61, 0.6);
+}
+
+.cart-fab--active:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* Пульсация при первом добавлении товара */
+.cart-fab--active {
+    animation: cart-fab-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        cart-fab-pulse 2s ease-in-out 0.5s 2;
+}
+
+@keyframes cart-fab-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 12px 32px rgba(255, 61, 61, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 12px 44px rgba(255, 61, 61, 0.85),
+            0 0 0 8px rgba(255, 61, 61, 0.12);
+    }
+}
+
+/* =====================================================
+   МОБИЛЬНАЯ ВЕРСИЯ
+   ===================================================== */
+@media (max-width: 600px) {
+    .cart-fab {
+        right: 16px;
+        bottom: 16px;
+        padding: 10px 14px 10px 10px;
+        gap: 10px;
+    }
+
+    .cart-fab__icon {
+        width: 38px;
+        height: 38px;
+        font-size: 17px;
+    }
+
+    .cart-fab__label {
+        font-size: 10px;
+    }
+
+    .cart-fab__value {
+        font-size: 14px;
+    }
+
+    .cart-fab__arrow {
+        display: none;
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 380px) {
+    .cart-fab__body {
+        display: none;
+    }
+
+    .cart-fab {
+        padding: 8px;
+        border-radius: 50%;
+    }
+
+    .cart-fab__icon {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+}
+
+/* =====================================================
+   УВАЖЕНИЕ К prefers-reduced-motion
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+
+    .cart-fab,
+    .cart-fab__badge {
+        animation: none;
+        transition: none;
+    }
+}

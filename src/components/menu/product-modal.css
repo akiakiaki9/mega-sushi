@@ -1,0 +1,430 @@
+/* =====================================================
+   PRODUCT MODAL
+   ===================================================== */
+.product-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: modal-fade 0.25s ease;
+}
+
+@keyframes modal-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.product-modal__dialog {
+    position: relative;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7);
+    animation: modal-pop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-pop {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ---------- Кнопка закрытия ---------- */
+.product-modal__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 5;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.product-modal__close:hover {
+    background: var(--accent);
+    transform: rotate(90deg);
+}
+
+/* =====================================================
+   ФОТО — целиком, без обрезки
+   ===================================================== */
+.product-modal__image {
+    position: relative;
+    background: var(--bg-3);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+}
+
+.product-modal__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    padding: 8px;
+}
+
+.product-modal__badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: var(--accent);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(255, 61, 61, 0.45);
+}
+
+/* =====================================================
+   ТЕЛО
+   ===================================================== */
+.product-modal__body {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.product-modal__head {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.product-modal__title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    line-height: 1.15;
+}
+
+/* ---------- Мета (шт, вес) ---------- */
+.product-modal__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.product-modal__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.product-modal__meta-item svg {
+    font-size: 10px;
+    color: var(--accent);
+}
+
+/* ---------- Короткое описание ---------- */
+.product-modal__short {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* ---------- Состав ---------- */
+.product-modal__composition {
+    background: var(--bg-3);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border-left: 3px solid var(--accent);
+}
+
+.product-modal__composition-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.product-modal__composition-label svg {
+    font-size: 11px;
+}
+
+.product-modal__composition p {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0;
+}
+
+/* =====================================================
+   ФУТЕР — всегда прижат к низу
+   ===================================================== */
+.product-modal__footer {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.product-modal__price {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    white-space: nowrap;
+}
+
+.product-modal__price small {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 3px;
+}
+
+/* ---------- Кнопка «Добавить» ---------- */
+.product-modal__add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: 100px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
+}
+
+.product-modal__add svg {
+    font-size: 12px;
+}
+
+.product-modal__add:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.product-modal__add:active {
+    transform: scale(0.97);
+}
+
+/* ---------- Счётчик ---------- */
+.product-modal__counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-3);
+    border-radius: 100px;
+    padding: 5px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.product-modal__counter button {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.product-modal__counter button:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+.product-modal__counter span {
+    min-width: 34px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 16px;
+}
+
+/* =====================================================
+   TABLET
+   ===================================================== */
+@media (max-width: 900px) {
+    .product-modal__dialog {
+        max-width: 560px;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        max-height: 92vh;
+    }
+
+    .product-modal__image {
+        aspect-ratio: 16 / 10;
+        min-height: auto;
+    }
+
+    .product-modal__image img {
+        padding: 0;
+    }
+
+    .product-modal__body {
+        padding: 22px;
+        gap: 14px;
+    }
+
+    .product-modal__title {
+        font-size: 22px;
+    }
+
+    .product-modal__price {
+        font-size: 24px;
+    }
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+@media (max-width: 600px) {
+    .product-modal {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .product-modal__dialog {
+        max-width: 100%;
+        max-height: 94vh;
+        border-radius: var(--radius) var(--radius) 0 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        animation: modal-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes modal-slide-up {
+        from {
+            transform: translateY(100%);
+        }
+
+        to {
+            transform: translateY(0);
+        }
+    }
+
+    .product-modal__close {
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    .product-modal__image {
+        aspect-ratio: 4 / 3;
+        max-height: 42vh;
+    }
+
+    .product-modal__image img {
+        padding: 6px;
+    }
+
+    .product-modal__body {
+        padding: 18px 20px 22px;
+        gap: 12px;
+    }
+
+    .product-modal__title {
+        font-size: 20px;
+    }
+
+    .product-modal__meta-item {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .product-modal__short {
+        font-size: 14px;
+    }
+
+    .product-modal__composition {
+        padding: 10px 12px;
+    }
+
+    .product-modal__composition p {
+        font-size: 12px;
+    }
+
+    .product-modal__footer {
+        padding-top: 14px;
+        gap: 12px;
+    }
+
+    .product-modal__price {
+        font-size: 22px;
+    }
+
+    .product-modal__add {
+        padding: 12px 18px;
+        font-size: 13px;
+    }
+
+    .product-modal__counter button {
+        width: 34px;
+        height: 34px;
+        font-size: 12px;
+    }
+
+    .product-modal__counter span {
+        min-width: 28px;
+        font-size: 15px;
+    }
+}

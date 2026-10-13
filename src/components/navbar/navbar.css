@@ -1,0 +1,357 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300; /* выше backdrop */
+  background: rgba(13, 13, 13, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  height: 72px;
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  gap: 16px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---------- Logo ---------- */
+.navbar__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+  min-width: 0;
+  position: relative;
+  z-index: 3;
+}
+
+.navbar__logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.navbar__logo-text {
+  white-space: nowrap;
+}
+
+.navbar__logo-text span {
+  color: var(--accent);
+}
+
+/* ---------- Nav (desktop) ---------- */
+.navbar__nav {
+  display: flex;
+  align-items: center;
+}
+
+.navbar__nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.navbar__link {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.2s;
+  position: relative;
+  white-space: nowrap;
+}
+
+.navbar__link:hover {
+  color: var(--text);
+}
+
+.navbar__link--active {
+  color: var(--text);
+}
+
+.navbar__link--active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ---------- Phone ---------- */
+.navbar__phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.2s;
+  white-space: nowrap;
+}
+
+.navbar__phone:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.navbar__phone-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* ---------- Socials ---------- */
+.navbar__socials {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar__socials--desktop {
+  display: flex;
+}
+
+.navbar__socials--mobile {
+  display: none;
+}
+
+.navbar__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 17px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.navbar__social:hover {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* ---------- Burger ---------- */
+.navbar__burger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  position: relative;
+  z-index: 4;
+  flex-shrink: 0;
+  border-radius: 10px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.navbar__burger:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.navbar__burger span,
+.navbar__burger span::before,
+.navbar__burger span::after {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.3s, top 0.3s, background 0.3s;
+  position: absolute;
+  left: 11px;
+}
+
+.navbar__burger span {
+  top: 21px;
+}
+
+.navbar__burger span::before {
+  content: '';
+  top: -7px;
+}
+
+.navbar__burger span::after {
+  content: '';
+  top: 7px;
+}
+
+.navbar__burger span.open {
+  background: transparent;
+}
+
+.navbar__burger span.open::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.navbar__burger span.open::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+/* ---------- Backdrop (скрыт на десктопе) ---------- */
+.navbar__backdrop {
+  display: none;
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+@media (max-width: 768px) {
+  .navbar {
+    height: 64px;
+  }
+
+  .navbar__burger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navbar__logo {
+    font-size: 18px;
+  }
+
+  .navbar__logo-img {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Скрываем desktop-иконки в баре */
+  .navbar__socials--desktop {
+    display: none;
+  }
+
+  /* ---------- Fullscreen menu ---------- */
+  .navbar__nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: var(--bg);
+    padding: 88px 24px 40px;
+    flex-direction: column;
+    align-items: stretch;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    z-index: 1; /* внутри navbar (300), под burger (4) и logo (3) */
+    visibility: hidden;
+    overscroll-behavior: contain;
+  }
+
+  .navbar__nav--open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .navbar__nav-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .navbar__link {
+    font-size: 26px;
+    font-weight: 700;
+    padding: 18px 4px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .navbar__link--active {
+    color: var(--accent);
+  }
+
+  .navbar__link--active::after {
+    display: none;
+  }
+
+  /* ---------- Phone в меню ---------- */
+  .navbar__phone {
+    margin-top: 24px;
+    width: 100%;
+    justify-content: center;
+    padding: 18px;
+    font-size: 16px;
+  }
+
+  .navbar__phone-icon {
+    font-size: 15px;
+  }
+
+  /* ---------- Соцсети в мобильном меню ---------- */
+  .navbar__socials--mobile {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .navbar__socials--mobile .navbar__social {
+    flex: 1;
+    width: auto;
+    height: 54px;
+    border-radius: var(--radius-sm);
+    font-size: 22px;
+  }
+
+  /* ---------- Backdrop ---------- */
+  .navbar__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 290; /* под navbar (300) — бургер кликается */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .navbar__backdrop--open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* =====================================================
+   Очень маленькие экраны
+   ===================================================== */
+@media (max-width: 380px) {
+  .navbar__logo-text {
+    display: none;
+  }
+
+  .navbar__link {
+    font-size: 22px;
+  }
+}
