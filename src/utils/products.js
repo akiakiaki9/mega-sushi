@@ -447,6 +447,14 @@ const PRODUCTS_RAW = [
     pieces: 24,
     category: 'sets',
   },
+  {
+    name: 'Бермуди',
+    description: '48 кусочка',
+    composition: 'Бермуди сет',
+    price: 300000,
+    pieces: 48,
+    category: 'sets',
+  },
 ];
 
 // Генерируем id и путь к изображению автоматически
