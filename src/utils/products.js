@@ -455,6 +455,30 @@ const PRODUCTS_RAW = [
     pieces: 48,
     category: 'sets',
   },
+  {
+    name: 'Принцесса',
+    description: '32 кусочка',
+    composition: 'Запеченные курица 1 порция, Запеченные с лососем 1 порция, Темпура с лососем, 1 порция, Филадельфии 1 порция',
+    price: 155000,
+    pieces: 32,
+    category: 'sets',
+  },
+  {
+    name: 'Бухара набор',
+    description: '',
+    composition: 'Бухара набор',
+    price: '',
+    pieces: '',
+    category: 'sets',
+  },
+  {
+    name: 'Гонг Конг сет',
+    description: '',
+    composition: 'Гонг Конг сет',
+    price: '',
+    pieces: '',
+    category: 'sets',
+  },
 ];
 
 // Генерируем id и путь к изображению автоматически
