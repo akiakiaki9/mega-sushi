@@ -10,7 +10,7 @@ export default function Hero() {
         <div className="hero__content">
           <div className="hero__badge">
             <FaClock className="hero__badge-icon" />
-            <span>Доставка 10:00 — 02:00</span>
+            <span>Доставка 10:00 — 23:00</span>
           </div>
 
           <h1 className="hero__title">
@@ -52,7 +52,7 @@ export default function Hero() {
               <span className="hero__feature-icon">
                 <FaClock />
               </span>
-              <span className="hero__feature-text">Работаем до 2:00</span>
+              <span className="hero__feature-text">Работаем до 23:00</span>
             </div>
           </div>
         </div>

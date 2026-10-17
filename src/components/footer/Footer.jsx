@@ -32,12 +32,12 @@ export default function Footer() {
 
                     <p className="footer__desc">
                         Свежие суши и роллы с доставкой по Бухаре. Работаем без выходных
-                        с 10:00 до 02:00.
+                        с 10:00 до 23:00.
                     </p>
 
                     <div className="footer__hours">
                         <FaClock />
-                        <span>Ежедневно 10:00 — 02:00</span>
+                        <span>Ежедневно 10:00 — 23:00</span>
                     </div>
                 </div>
 
