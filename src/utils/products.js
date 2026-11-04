@@ -415,7 +415,7 @@ const PRODUCTS_RAW = [
   },
   {
     name: 'Сет Венеция',
-    description: '32 кусочка',
+    description: '24 кусочка',
     composition: 'Филадельфия Лайт, Калифорния 1/2, Запечённый с курицей 1/2, Терияки темпура',
     price: 120000,
     pieces: 32,
