@@ -14,9 +14,9 @@ export default function Hero() {
           </div>
 
           <h1 className="hero__title">
-            Свежие суши
+            Наслаждайтесь
             <br />
-            в <span>Бухаре</span>
+            с <span>неповторимый</span> вкусом
           </h1>
 
           <p className="hero__subtitle">
